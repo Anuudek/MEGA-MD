@@ -90,32 +90,38 @@ export async function storeMessage(sock, message) {
         let mediaPath = '';
         let isViewOnce = false;
         const sender = message.key.participant || message.key.remoteJid;
+        // View-once media shows up two different ways depending on the
+        // sending client: wrapped in a viewOnceMessage(V2) container, or as
+        // a regular imageMessage/videoMessage with a `viewOnce: true` flag
+        // set directly on it (no wrapper at all).
         const viewOnceContainer = message.message?.viewOnceMessageV2?.message || message.message?.viewOnceMessage?.message;
-        if (viewOnceContainer) {
-            if (viewOnceContainer.imageMessage) {
-                mediaType = 'image';
-                content = viewOnceContainer.imageMessage.caption || '';
-                const stream = await downloadContentFromMessage(viewOnceContainer.imageMessage, 'image');
-                let buffer = Buffer.from([]);
-                for await (const chunk of stream) {
-                    buffer = Buffer.concat([buffer, chunk]);
-                }
-                mediaPath = path.join(TEMP_MEDIA_DIR, `${messageId}.jpg`);
-                await writeFile(mediaPath, buffer);
-                isViewOnce = true;
+        const directViewOnceImage = message.message?.imageMessage?.viewOnce ? message.message.imageMessage : null;
+        const directViewOnceVideo = message.message?.videoMessage?.viewOnce ? message.message.videoMessage : null;
+        if (viewOnceContainer?.imageMessage || directViewOnceImage) {
+            const img = viewOnceContainer?.imageMessage || directViewOnceImage;
+            mediaType = 'image';
+            content = img.caption || '';
+            const stream = await downloadContentFromMessage(img, 'image');
+            let buffer = Buffer.from([]);
+            for await (const chunk of stream) {
+                buffer = Buffer.concat([buffer, chunk]);
             }
-            else if (viewOnceContainer.videoMessage) {
-                mediaType = 'video';
-                content = viewOnceContainer.videoMessage.caption || '';
-                const stream = await downloadContentFromMessage(viewOnceContainer.videoMessage, 'video');
-                let buffer = Buffer.from([]);
-                for await (const chunk of stream) {
-                    buffer = Buffer.concat([buffer, chunk]);
-                }
-                mediaPath = path.join(TEMP_MEDIA_DIR, `${messageId}.mp4`);
-                await writeFile(mediaPath, buffer);
-                isViewOnce = true;
+            mediaPath = path.join(TEMP_MEDIA_DIR, `${messageId}.jpg`);
+            await writeFile(mediaPath, buffer);
+            isViewOnce = true;
+        }
+        else if (viewOnceContainer?.videoMessage || directViewOnceVideo) {
+            const vid = viewOnceContainer?.videoMessage || directViewOnceVideo;
+            mediaType = 'video';
+            content = vid.caption || '';
+            const stream = await downloadContentFromMessage(vid, 'video');
+            let buffer = Buffer.from([]);
+            for await (const chunk of stream) {
+                buffer = Buffer.concat([buffer, chunk]);
             }
+            mediaPath = path.join(TEMP_MEDIA_DIR, `${messageId}.mp4`);
+            await writeFile(mediaPath, buffer);
+            isViewOnce = true;
         }
         else if (message.message?.conversation) {
             content = message.message.conversation;

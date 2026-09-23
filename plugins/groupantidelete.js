@@ -42,20 +42,26 @@ export async function storeGroupMessage(sock, message) {
         let mediaPath = '';
         let isViewOnce = false;
         const sender = message.key.participant || message.key.remoteJid;
+        // View-once media shows up two different ways depending on the
+        // sending client: wrapped in a viewOnceMessage(V2) container, or as
+        // a regular imageMessage/videoMessage with a `viewOnce: true` flag
+        // set directly on it (no wrapper at all).
         const viewOnceContainer = message.message?.viewOnceMessageV2?.message || message.message?.viewOnceMessage?.message;
-        if (viewOnceContainer) {
-            if (viewOnceContainer.imageMessage) {
-                mediaType = 'image';
-                content = viewOnceContainer.imageMessage.caption || '';
-                mediaPath = await downloadToTemp(viewOnceContainer.imageMessage, 'image', `gad_${messageId}.jpg`);
-                isViewOnce = true;
-            }
-            else if (viewOnceContainer.videoMessage) {
-                mediaType = 'video';
-                content = viewOnceContainer.videoMessage.caption || '';
-                mediaPath = await downloadToTemp(viewOnceContainer.videoMessage, 'video', `gad_${messageId}.mp4`);
-                isViewOnce = true;
-            }
+        const directViewOnceImage = message.message?.imageMessage?.viewOnce ? message.message.imageMessage : null;
+        const directViewOnceVideo = message.message?.videoMessage?.viewOnce ? message.message.videoMessage : null;
+        if (viewOnceContainer?.imageMessage || directViewOnceImage) {
+            const img = viewOnceContainer?.imageMessage || directViewOnceImage;
+            mediaType = 'image';
+            content = img.caption || '';
+            mediaPath = await downloadToTemp(img, 'image', `gad_${messageId}.jpg`);
+            isViewOnce = true;
+        }
+        else if (viewOnceContainer?.videoMessage || directViewOnceVideo) {
+            const vid = viewOnceContainer?.videoMessage || directViewOnceVideo;
+            mediaType = 'video';
+            content = vid.caption || '';
+            mediaPath = await downloadToTemp(vid, 'video', `gad_${messageId}.mp4`);
+            isViewOnce = true;
         }
         else if (message.message?.conversation) {
             content = message.message.conversation;
