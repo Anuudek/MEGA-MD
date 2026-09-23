@@ -14,8 +14,6 @@ import config from '../config.js';
  *                                                                           *
  *****************************************************************************/
 import commandHandler from '../lib/commandHandler.js';
-import path from 'path';
-import fs from 'fs';
 import i18n from '../lib/i18n.js';
 function formatTime() {
     const now = new Date();
@@ -158,7 +156,6 @@ export default {
     async handler(sock, message, args, context) {
         const { chatId, channelInfo } = context;
         const prefix = config.prefixes[0];
-        const imagePath = path.join(process.cwd(), 'assets/thumb.png');
         if (args.length) {
             const searchTerm = args[0].toLowerCase();
             let cmd = commandHandler.commands.get(searchTerm);
@@ -182,13 +179,6 @@ export default {
 ┃ 🔖 *${i18n('list.aliases')}:* ${cmd.aliases?.length ? cmd.aliases.map((a) => prefix + a).join(', ') : i18n('list.none')}
 ┃
 ╰━━━━━━━━━━━━━━⬣`;
-            if (fs.existsSync(imagePath)) {
-                return sock.sendMessage(chatId, {
-                    image: { url: imagePath },
-                    caption: text,
-                    ...channelInfo
-                }, { quoted: message });
-            }
             return sock.sendMessage(chatId, { text, ...channelInfo }, { quoted: message });
         }
         const style = pick(menuStyles);
@@ -209,16 +199,7 @@ export default {
             },
             categories: commandHandler.categories
         });
-        if (fs.existsSync(imagePath)) {
-            await sock.sendMessage(chatId, {
-                image: { url: imagePath },
-                caption: text,
-                ...channelInfo
-            }, { quoted: message });
-        }
-        else {
-            await sock.sendMessage(chatId, { text, ...channelInfo }, { quoted: message });
-        }
+        await sock.sendMessage(chatId, { text, ...channelInfo }, { quoted: message });
     }
 };
 /*****************************************************************************

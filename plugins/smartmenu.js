@@ -1,7 +1,5 @@
 import config from '../config.js';
 import CommandHandler from '../lib/commandHandler.js';
-import fs from 'fs';
-import path from 'path';
 import t from '../lib/i18n.js';
 const menuEmojis = ['✨', '🌟', '⭐', '💫', '🎯', '🎨', '🎪', '🎭'];
 const activeEmojis = ['✅', '🟢', '💚', '✔️', '☑️'];
@@ -56,8 +54,6 @@ export default {
     async handler(sock, message, args, context) {
         const chatId = context.chatId || message.key.remoteJid;
         try {
-            const imagePath = path.join(process.cwd(), 'assets/thumb.png');
-            const thumbnail = fs.existsSync(imagePath) ? fs.readFileSync(imagePath) : null;
             const categories = Array.from(CommandHandler.categories.keys());
             const stats = CommandHandler.getDiagnostics();
             const menuEmoji = getRandomEmoji(menuEmojis);
@@ -113,9 +109,7 @@ export default {
             menuText += `├─ ${fastEmoji} ${t('smartmenu.fast')}\n`;
             menuText += `├─ ${slowEmoji} ${t('smartmenu.slow')}\n`;
             menuText += `⁠└────────────────`;
-            const messageOptions = thumbnail
-                ? { image: thumbnail, caption: menuText }
-                : { text: menuText };
+            const messageOptions = { text: menuText };
             await sock.sendMessage(chatId, messageOptions, { quoted: message });
         }
         catch (error) {
