@@ -15,6 +15,11 @@ RUN npm ci --omit=dev
 COPY . /app/code
 COPY start.sh /app/pkg/start.sh
 RUN chmod +x /app/pkg/start.sh && \
+    rm -rf /app/code/session /app/code/data /app/code/temp /app/code/.env && \
+    ln -s /app/data/session /app/code/session && \
+    ln -s /app/data/data /app/code/data && \
+    ln -s /app/data/temp /app/code/temp && \
+    ln -s /app/data/.env /app/code/.env && \
     chown -R cloudron:cloudron /app/code
 
 CMD ["/app/pkg/start.sh"]
