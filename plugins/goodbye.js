@@ -1,5 +1,6 @@
 import { handleGoodbye } from '../lib/welcome.js';
 import { isGoodByeOn, getGoodbye } from '../lib/index.js';
+import t from '../lib/i18n.js';
 async function handleLeaveEvent(sock, id, participants) {
     const isGoodbyeEnabled = await isGoodByeOn(id);
     if (!isGoodbyeEnabled)
@@ -35,7 +36,7 @@ async function handleLeaveEvent(sock, id, participants) {
                     .replace(/{group}/g, groupName);
             }
             else {
-                finalMessage = `*@${displayName}* we will never miss you!`;
+                finalMessage = t('goodbye.defaultMessage', { user: displayName });
             }
             try {
                 let profilePicUrl = `https://img.pyrocdn.com/dbKUgahg.png`;
@@ -79,7 +80,7 @@ async function handleLeaveEvent(sock, id, participants) {
                     .replace(/{group}/g, groupName);
             }
             else {
-                fallbackMessage = `Goodbye @${user}! 👋`;
+                fallbackMessage = t('goodbye.fallback', { user });
             }
             await sock.sendMessage(id, {
                 text: fallbackMessage,

@@ -1,3 +1,4 @@
+import t from '../lib/i18n.js';
 export default {
     command: 'mute',
     aliases: ['silence'],
@@ -14,14 +15,14 @@ export default {
             if (durationInMinutes !== undefined && durationInMinutes > 0) {
                 const durationInMilliseconds = durationInMinutes * 60 * 1000;
                 await sock.sendMessage(chatId, {
-                    text: `The group has been muted for ${durationInMinutes} minutes.`,
+                    text: t('mute.mutedFor', { minutes: durationInMinutes }),
                     ...channelInfo
                 }, { quoted: message });
                 setTimeout(async () => {
                     try {
                         await sock.groupSettingUpdate(chatId, 'not_announcement');
                         await sock.sendMessage(chatId, {
-                            text: 'The group has been unmuted.',
+                            text: t('mute.unmuted'),
                             ...channelInfo
                         });
                     }
@@ -32,7 +33,7 @@ export default {
             }
             else {
                 await sock.sendMessage(chatId, {
-                    text: 'The group has been muted.',
+                    text: t('mute.muted'),
                     ...channelInfo
                 }, { quoted: message });
             }
@@ -40,7 +41,7 @@ export default {
         catch (error) {
             console.error('Error muting/unmuting the group:', error);
             await sock.sendMessage(chatId, {
-                text: 'An error occurred while muting/unmuting the group. Please try again.',
+                text: t('mute.error'),
                 ...channelInfo
             }, { quoted: message });
         }

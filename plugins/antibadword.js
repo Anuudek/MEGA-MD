@@ -1,4 +1,5 @@
 import store from '../lib/lightweight_store.js';
+import t from '../lib/i18n.js';
 async function getAntibadwordSettings(chatId) {
     const settings = await store.getSetting(chatId, 'antibadword');
     return settings || { enabled: false, words: [] };
@@ -11,18 +12,18 @@ async function handleAntiBadwordCommand(sock, chatId, message, match) {
     const action = args[0];
     const settings = await getAntibadwordSettings(chatId);
     if (!action || action === 'status') {
-        const status = settings.enabled ? '✅ Enabled' : '❌ Disabled';
+        const status = settings.enabled ? t('antibadword.enabled') : t('antibadword.disabled');
         const wordCount = settings.words?.length || 0;
         await sock.sendMessage(chatId, {
-            text: `*Anti-Badword Status*\n\n` +
-                `Status: ${status}\n` +
-                `Blocked Words: ${wordCount}\n\n` +
-                `Use:\n` +
-                `• \`.antibadword on\` - Enable\n` +
-                `• \`.antibadword off\` - Disable\n` +
-                `• \`.antibadword add <word>\` - Add word\n` +
-                `• \`.antibadword remove <word>\` - Remove word\n` +
-                `• \`.antibadword list\` - Show all words`
+            text: `${t('antibadword.statusTitle')}\n\n` +
+                `${t('antibadword.status')}: ${status}\n` +
+                `${t('antibadword.blockedWords')}: ${wordCount}\n\n` +
+                `${t('antibadword.usageTitle')}\n` +
+                `• ${t('antibadword.cmdOn')}\n` +
+                `• ${t('antibadword.cmdOff')}\n` +
+                `• ${t('antibadword.cmdAdd')}\n` +
+                `• ${t('antibadword.cmdRemove')}\n` +
+                `• ${t('antibadword.cmdList')}`
         }, { quoted: message });
         return;
     }
@@ -30,7 +31,7 @@ async function handleAntiBadwordCommand(sock, chatId, message, match) {
         settings.enabled = true;
         await saveAntibadwordSettings(chatId, settings);
         await sock.sendMessage(chatId, {
-            text: '✅ *Anti-Badword Enabled*\n\nMessages with blocked words will be deleted.'
+            text: t('antibadword.enabledMsg')
         }, { quoted: message });
         return;
     }
@@ -38,7 +39,7 @@ async function handleAntiBadwordCommand(sock, chatId, message, match) {
         settings.enabled = false;
         await saveAntibadwordSettings(chatId, settings);
         await sock.sendMessage(chatId, {
-            text: '❌ *Anti-Badword Disabled*\n\nBadword filter is now inactive.'
+            text: t('antibadword.disabledMsg')
         }, { quoted: message });
         return;
     }
@@ -46,7 +47,7 @@ async function handleAntiBadwordCommand(sock, chatId, message, match) {
         const word = args.slice(1).join(' ').toLowerCase().trim();
         if (!word) {
             await sock.sendMessage(chatId, {
-                text: '❌ *Please specify a word to add*\n\nExample: `.antibadword add badword`'
+                text: t('antibadword.specifyAdd')
             }, { quoted: message });
             return;
         }
@@ -54,14 +55,14 @@ async function handleAntiBadwordCommand(sock, chatId, message, match) {
             settings.words = [];
         if (settings.words.includes(word)) {
             await sock.sendMessage(chatId, {
-                text: `❌ *Word already in list*\n\n"${word}" is already blocked.`
+                text: t('antibadword.alreadyInList', { word })
             }, { quoted: message });
             return;
         }
         settings.words.push(word);
         await saveAntibadwordSettings(chatId, settings);
         await sock.sendMessage(chatId, {
-            text: `✅ *Word Added*\n\nAdded "${word}" to blocked words list.\n\nTotal blocked words: ${settings.words.length}`
+            text: t('antibadword.wordAdded', { word, count: settings.words.length })
         }, { quoted: message });
         return;
     }
@@ -69,42 +70,38 @@ async function handleAntiBadwordCommand(sock, chatId, message, match) {
         const word = args.slice(1).join(' ').toLowerCase().trim();
         if (!word) {
             await sock.sendMessage(chatId, {
-                text: '❌ *Please specify a word to remove*\n\nExample: `.antibadword remove badword`'
+                text: t('antibadword.specifyRemove')
             }, { quoted: message });
             return;
         }
         if (!settings.words || !settings.words.includes(word)) {
             await sock.sendMessage(chatId, {
-                text: `❌ *Word not found*\n\n"${word}" is not in the blocked list.`
+                text: t('antibadword.notInList', { word })
             }, { quoted: message });
             return;
         }
         settings.words = settings.words.filter((w) => w !== word);
         await saveAntibadwordSettings(chatId, settings);
         await sock.sendMessage(chatId, {
-            text: `✅ *Word Removed*\n\nRemoved "${word}" from blocked words list.\n\nRemaining blocked words: ${settings.words.length}`
+            text: t('antibadword.wordRemoved', { word, count: settings.words.length })
         }, { quoted: message });
         return;
     }
     if (action === 'list') {
         if (!settings.words || settings.words.length === 0) {
             await sock.sendMessage(chatId, {
-                text: '📝 *Blocked Words List*\n\nNo words are currently blocked.\n\nUse `.antibadword add <word>` to add words.'
+                text: `${t('antibadword.emptyListTitle')}\n\n${t('antibadword.emptyList')}`
             }, { quoted: message });
             return;
         }
         const wordList = settings.words.map((w, i) => `${i + 1}. ${w}`).join('\n');
         await sock.sendMessage(chatId, {
-            text: `📝 *Blocked Words List*\n\n${wordList}\n\nTotal: ${settings.words.length} words`
+            text: `${t('antibadword.listTitle')}\n\n${wordList}\n\n${t('antibadword.total')}: ${settings.words.length} ${t('antibadword.words')}`
         }, { quoted: message });
         return;
     }
     await sock.sendMessage(chatId, {
-        text: '❌ *Invalid action*\n\nUse:\n' +
-            '• `.antibadword on/off`\n' +
-            '• `.antibadword add <word>`\n' +
-            '• `.antibadword remove <word>`\n' +
-            '• `.antibadword list`'
+        text: t('antibadword.invalidAction')
     }, { quoted: message });
 }
 async function checkAntiBadword(sock, message) {
@@ -126,7 +123,7 @@ async function checkAntiBadword(sock, message) {
             try {
                 await sock.sendMessage(chatId, { delete: message.key });
                 await sock.sendMessage(chatId, {
-                    text: `❌ Message deleted: Contains blocked word "${word}"`
+                    text: t('antibadword.deletedMsg', { word })
                 });
                 return true;
             }
@@ -155,7 +152,7 @@ export default {
         catch (error) {
             console.error('Error in antibadword command:', error);
             await sock.sendMessage(chatId, {
-                text: '❌ *Error processing antibadword command*\n\nPlease try again later.'
+                text: t('antibadword.genericError')
             }, { quoted: message });
         }
     }

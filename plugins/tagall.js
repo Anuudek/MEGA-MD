@@ -1,3 +1,4 @@
+import t from '../lib/i18n.js';
 export default {
     command: 'tagall',
     aliases: ['everyone', 'all'],
@@ -13,12 +14,12 @@ export default {
             const participants = groupMetadata.participants;
             if (!participants || participants.length === 0) {
                 await sock.sendMessage(chatId, {
-                    text: 'No participants found in the group.',
+                    text: t('tagall.noParticipants'),
                     ...channelInfo
                 }, { quoted: message });
                 return;
             }
-            let messageText = '🔊 *Hello Everyone:*\n\n';
+            let messageText = t('tagall.hello');
             participants.forEach((participant) => {
                 messageText += `@${participant.id.split('@')[0]}\n`;
             });
@@ -31,7 +32,7 @@ export default {
         catch (error) {
             console.error('Error in tagall command:', error);
             await sock.sendMessage(chatId, {
-                text: 'Failed to tag all members.',
+                text: t('tagall.failed'),
                 ...channelInfo
             }, { quoted: message });
         }

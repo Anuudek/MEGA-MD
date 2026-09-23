@@ -1,3 +1,4 @@
+import t from '../lib/i18n.js';
 async function handlePromotionEvent(sock, groupId, participants, author) {
     try {
         if (!Array.isArray(participants) || participants.length === 0) {
@@ -17,13 +18,13 @@ async function handlePromotionEvent(sock, groupId, participants, author) {
             mentionList.push(authorJid);
         }
         else {
-            promotedBy = 'System';
+            promotedBy = t('promote.system');
         }
-        const promotionMessage = `*『 GROUP PROMOTION 』*\n\n` +
-            `👥 *Promoted User${participants.length > 1 ? 's' : ''}:*\n` +
+        const promotionMessage = `${t('promote.title')}\n\n` +
+            `👥 *${t('promote.promotedUsers', { plural: participants.length > 1 ? 's' : '' })}:*\n` +
             `${promotedUsernames.map(name => `• ${name}`).join('\n')}\n\n` +
-            `👑 *Promoted By:* ${promotedBy}\n\n` +
-            `📅 *Date:* ${new Date().toLocaleString()}`;
+            `👑 *${t('promote.promotedBy')}:* ${promotedBy}\n\n` +
+            `📅 *${t('promote.date')}:* ${new Date().toLocaleString()}`;
         await sock.sendMessage(groupId, {
             text: promotionMessage,
             mentions: mentionList
@@ -53,7 +54,7 @@ export default {
         }
         if (userToPromote.length === 0) {
             await sock.sendMessage(chatId, {
-                text: 'Please mention the user or reply to their message to promote!',
+                text: t('promote.usage'),
                 ...channelInfo
             }, { quoted: message });
             return;
@@ -64,11 +65,11 @@ export default {
                 return `@${jid.split('@')[0]}`;
             }));
             const promoterJid = sock.user.id;
-            const promotionMessage = `*『 GROUP PROMOTION 』*\n\n` +
-                `👥 *Promoted User${userToPromote.length > 1 ? 's' : ''}:*\n` +
+            const promotionMessage = `${t('promote.title')}\n\n` +
+                `👥 *${t('promote.promotedUsers', { plural: userToPromote.length > 1 ? 's' : '' })}:*\n` +
                 `${usernames.map(name => `• ${name}`).join('\n')}\n\n` +
-                `👑 *Promoted By:* @${promoterJid.split('@')[0]}\n\n` +
-                `📅 *Date:* ${new Date().toLocaleString()}`;
+                `👑 *${t('promote.promotedBy')}:* @${promoterJid.split('@')[0]}\n\n` +
+                `📅 *${t('promote.date')}:* ${new Date().toLocaleString()}`;
             await sock.sendMessage(chatId, {
                 text: promotionMessage,
                 mentions: [...userToPromote, promoterJid],
@@ -78,7 +79,7 @@ export default {
         catch (error) {
             console.error('Error in promote command:', error);
             await sock.sendMessage(chatId, {
-                text: 'Failed to promote user(s)!',
+                text: t('promote.failed'),
                 ...channelInfo
             }, { quoted: message });
         }

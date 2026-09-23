@@ -1,6 +1,7 @@
 import { downloadContentFromMessage } from '@whiskeysockets/baileys';
 import fs from 'fs';
 import path from 'path';
+import t from '../lib/i18n.js';
 async function downloadMediaMessage(message, mediaType) {
     const stream = await downloadContentFromMessage(message, mediaType);
     let buffer = Buffer.from([]);
@@ -29,7 +30,7 @@ export default {
         const messageText = rawText.slice(8).trim();
         if (!isBotAdmin) {
             await sock.sendMessage(chatId, {
-                text: '❌ *Please make the bot an admin first*'
+                text: t('hidetag.botNotAdmin')
             }, { quoted: message });
             return;
         }
@@ -76,7 +77,7 @@ export default {
         }
         else {
             await sock.sendMessage(chatId, {
-                text: messageText || '📢 *Announcement for all members*',
+                text: messageText || t('hidetag.announcement'),
                 mentions: nonAdmins
             });
         }

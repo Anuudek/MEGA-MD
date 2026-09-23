@@ -1,3 +1,4 @@
+import t from '../lib/i18n.js';
 export default {
     command: 'unmute',
     aliases: ['unsilence'],
@@ -11,14 +12,14 @@ export default {
         try {
             await sock.groupSettingUpdate(chatId, 'not_announcement');
             await sock.sendMessage(chatId, {
-                text: 'The group has been unmuted.',
+                text: t('unmute.unmuted'),
                 ...channelInfo
             }, { quoted: message });
         }
         catch (error) {
             console.error('Error unmuting group:', error);
             await sock.sendMessage(chatId, {
-                text: 'Failed to unmute the group.',
+                text: t('unmute.error'),
                 ...channelInfo
             }, { quoted: message });
         }

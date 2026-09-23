@@ -1,3 +1,4 @@
+import t from '../lib/i18n.js';
 export default {
     command: 'kick',
     aliases: ['remove', 'fire'],
@@ -11,7 +12,7 @@ export default {
         const isBotAdmin = context.isBotAdmin;
         if (!isBotAdmin) {
             await sock.sendMessage(chatId, {
-                text: '❌ *Please make the bot an admin first*'
+                text: t('kick.botNotAdmin')
             }, { quoted: message });
             return;
         }
@@ -25,7 +26,7 @@ export default {
         }
         if (usersToKick.length === 0) {
             await sock.sendMessage(chatId, {
-                text: '❌ *Please mention a user or reply to their message*\n\nUsage: `.kick @user` or reply with `.kick`'
+                text: t('kick.usage')
             }, { quoted: message });
             return;
         }
@@ -77,7 +78,7 @@ export default {
         });
         if (isTryingToKickBot) {
             await sock.sendMessage(chatId, {
-                text: "❌ *I can't kick myself* 🤖"
+                text: t('kick.cannotKickSelf')
             }, { quoted: message });
             return;
         }
@@ -86,15 +87,16 @@ export default {
             const usernames = await Promise.all(usersToKick.map(async (jid) => {
                 return `@${jid.split('@')[0]}`;
             }));
+            const plural = usersToKick.length > 1 ? 's' : '';
             await sock.sendMessage(chatId, {
-                text: `🚫 *User${usersToKick.length > 1 ? 's' : ''} Removed*\n\n${usernames.join(', ')} has been kicked from the group!`,
+                text: t('kick.removed', { plural, users: usernames.join(', ') }),
                 mentions: usersToKick
             }, { quoted: message });
         }
         catch (error) {
             console.error('Error in kick command:', error);
             await sock.sendMessage(chatId, {
-                text: '❌ *Failed to kick user(s)*\n\nMake sure the bot has sufficient permissions.'
+                text: t('kick.failed')
             }, { quoted: message });
         }
     }
