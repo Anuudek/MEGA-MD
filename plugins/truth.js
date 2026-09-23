@@ -1,3 +1,4 @@
+import t from '../lib/i18n.js';
 export default {
     command: 'truth',
     aliases: ['truthdare'],
@@ -21,7 +22,7 @@ export default {
         catch (error) {
             console.error('Error in truth command:', error);
             await sock.sendMessage(chatId, {
-                text: '❌ Failed to get truth. Please try again later!'
+                text: t('truth.fetchError')
             }, { quoted: message });
         }
     }
