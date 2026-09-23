@@ -1,0 +1,19 @@
+{
+  "id": "com.allhands.megamd",
+  "title": "MEGA-MD WhatsApp Bot",
+  "author": "allhands",
+  "description": "Feature-rich WhatsApp bot (Baileys) with games, stickers, AI chat and group moderation. Packaged from GlobalTechInfo/MEGA-MD for internal allhands use.",
+  "tagline": "WhatsApp bot with games, stickers, AI and moderation",
+  "version": "1.0.0",
+  "manifestVersion": 2,
+  "healthCheckPath": "/",
+  "httpPort": 5000,
+  "icon": "file://logo.png",
+  "addons": {
+    "localstorage": {}
+  },
+  "tags": ["whatsapp", "bot", "chat", "automation"],
+  "website": "https://github.com/GlobalTechInfo/MEGA-MD",
+  "contactEmail": "marketing@allhandshub.com",
+  "memoryLimit": 536870912
+}
