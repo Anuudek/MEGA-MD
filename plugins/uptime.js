@@ -12,6 +12,7 @@
  *                 Unauthorized copying or distribution is prohibited.       *
  *                                                                           *
  *****************************************************************************/
+import t from '../lib/i18n.js';
 export default {
     command: 'uptime',
     aliases: ['runtime'],
@@ -41,11 +42,11 @@ export default {
         const startedAt = new Date(Date.now() - uptimeMs).toLocaleString();
         const ramMb = (process.memoryUsage().rss / 1024 / 1024).toFixed(1);
         const commandCount = commandHandler.commands.size;
-        const text = `🤖 *MEGA-MD STATUS*\n\n` +
-            `⏱ Uptime: ${formatUptime(uptimeMs)}\n` +
-            `🚀 Started: ${startedAt}\n` +
-            `📦 Plugins: ${commandCount}\n` +
-            `💾 RAM: ${ramMb} MB`;
+        const text = `${t('uptime.title')}\n\n` +
+            `${t('uptime.uptimeLabel')}: ${formatUptime(uptimeMs)}\n` +
+            `${t('uptime.started')}: ${startedAt}\n` +
+            `${t('uptime.plugins')}: ${commandCount}\n` +
+            `${t('uptime.ram')}: ${ramMb} MB`;
         await sock.sendMessage(chatId, { text });
     }
 };

@@ -1,6 +1,7 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import os from 'os';
+import t from '../lib/i18n.js';
 const execAsync = promisify(exec);
 export default {
     command: 'sysinfo',
@@ -53,29 +54,27 @@ export default {
             const arch = os.arch();
             const nodeVer = process.version;
             const hostname = os.hostname();
-            const text = `╔══════════════════════════════╗
-║     🖥️  *SERVER STATS*        ║
-╚══════════════════════════════╝
+            const text = `${t('sysinfo.title')}
 
-🏠 *Host:* ${hostname}
-🐧 *OS:* ${platform} (${arch})
-⏱️ *Uptime:* ${uptimeOut}
-🟢 *Node.js:* ${nodeVer}
+${t('sysinfo.host')} ${hostname}
+${t('sysinfo.os')} ${platform} (${arch})
+${t('sysinfo.uptime')} ${uptimeOut}
+${t('sysinfo.node')} ${nodeVer}
 
-━━━━━━ 🧠 CPU ━━━━━━
-🔧 *Model:* ${cpuModel}
-⚙️ *Cores:* ${cpuCores}
-📊 *Load Avg:* ${loadAvg}
+${t('sysinfo.cpuSection')}
+${t('sysinfo.model')} ${cpuModel}
+${t('sysinfo.cores')} ${cpuCores}
+${t('sysinfo.loadAvg')} ${loadAvg}
 
-━━━━━━ 💾 Memory ━━━━━━
-📦 *Total:* ${memTotal}
-🔴 *Used:* ${memUsed}
-🟢 *Free:* ${memFree}
+${t('sysinfo.memSection')}
+${t('sysinfo.total')} ${memTotal}
+${t('sysinfo.used')} ${memUsed}
+${t('sysinfo.free')} ${memFree}
 
-━━━━━━ 💿 Disk (/) ━━━━━━
-📦 *Total:* ${diskTotal}
-🔴 *Used:* ${diskUsed} (${diskPct})
-🟢 *Free:* ${diskFree}`;
+${t('sysinfo.diskSection')}
+${t('sysinfo.total')} ${diskTotal}
+${t('sysinfo.used')} ${diskUsed} (${diskPct})
+${t('sysinfo.free')} ${diskFree}`;
             await sock.sendMessage(chatId, {
                 text,
                 ...channelInfo
@@ -83,7 +82,7 @@ export default {
         }
         catch (error) {
             await sock.sendMessage(chatId, {
-                text: `❌ Failed to get system info: ${error.message}`,
+                text: t('sysinfo.error', { message: error.message }),
                 ...channelInfo
             }, { quoted: message });
         }

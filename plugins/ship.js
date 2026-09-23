@@ -1,3 +1,4 @@
+import t from '../lib/i18n.js';
 export default {
     command: 'ship',
     aliases: ['couple'],
@@ -17,7 +18,7 @@ export default {
             } while (secondUser === firstUser);
             const formatMention = (id) => `@${ id.split('@')[0]}`;
             await sock.sendMessage(chatId, {
-                text: `${formatMention(firstUser)} ❤️ ${formatMention(secondUser)}\nCongratulations 💖🍻`,
+                text: t('ship.congrats', { a: formatMention(firstUser), b: formatMention(secondUser) }),
                 mentions: [firstUser, secondUser],
                 ...channelInfo
             });
@@ -25,7 +26,7 @@ export default {
         catch (error) {
             console.error('Error in ship command:', error);
             await sock.sendMessage(chatId, {
-                text: '❌ Failed to ship! Make sure this is a group.',
+                text: t('ship.failed'),
                 ...channelInfo
             }, { quoted: message });
         }
