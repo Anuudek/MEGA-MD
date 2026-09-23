@@ -1,4 +1,5 @@
 import axios from 'axios';
+import t from '../lib/i18n.js';
 export default {
     command: 'joke',
     aliases: ['jokes', 'funny'],
@@ -17,7 +18,7 @@ export default {
         catch (error) {
             console.error('Error fetching dad joke:', error);
             await sock.sendMessage(chatId, {
-                text: 'Sorry, I could not fetch a joke right now. Please try again later.',
+                text: t('joke.fetchError'),
                 quoted: message
             });
         }

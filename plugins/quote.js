@@ -1,3 +1,4 @@
+import t from '../lib/i18n.js';
 export default {
     command: 'quote',
     aliases: ['quotes', 'quotetext'],
@@ -18,7 +19,7 @@ export default {
         catch (error) {
             console.error('Quote Command Error:', error);
             await sock.sendMessage(chatId, {
-                text: '❌ Failed to get quote. Please try again later!'
+                text: t('quote.fetchError')
             }, { quoted: message });
         }
     }

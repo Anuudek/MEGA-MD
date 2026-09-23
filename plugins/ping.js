@@ -1,3 +1,4 @@
+import t from '../lib/i18n.js';
 export default {
     command: 'ping',
     aliases: ['p', 'pong'],
@@ -9,11 +10,11 @@ export default {
         const start = Date.now();
         const chatId = message.key.remoteJid;
         const sent = await sock.sendMessage(chatId, {
-            text: 'Pinging...'
+            text: t('ping.pinging')
         });
         const end = Date.now();
         await sock.sendMessage(chatId, {
-            text: `🏓 Pong!\nLatency: ${end - start}ms`,
+            text: t('ping.pong', { ms: end - start }),
             edit: sent.key
         });
     }

@@ -1,3 +1,4 @@
+import t from '../lib/i18n.js';
 export default {
     command: 'translate',
     aliases: ['trt'],
@@ -23,7 +24,7 @@ export default {
             else {
                 if (args.length < 2) {
                     return await sock.sendMessage(chatId, {
-                        text: `*TRANSLATOR*\n\nUsage:\n1. Reply to a message with: .translate <lang> or .trt <lang>\n2. Or type: .translate <text> <lang> or .trt <text> <lang>\n\nExample:\n.translate hello fr\n.trt hello fr\n\nLanguage codes:\nfr - French\nes - Spanish\nde - German\nit - Italian\npt - Portuguese\nru - Russian\nja - Japanese\nko - Korean\nzh - Chinese\nar - Arabic\nhi - Hindi`,
+                        text: `${t('translate.helpTitle')}\n\n${t('translate.help')}`,
                         quoted: message
                     });
                 }
@@ -32,7 +33,7 @@ export default {
             }
             if (!textToTranslate) {
                 return await sock.sendMessage(chatId, {
-                    text: 'No text found to translate. Please provide text or reply to a message.',
+                    text: t('translate.noText'),
                     quoted: message
                 });
             }
@@ -86,7 +87,7 @@ export default {
         catch (error) {
             console.error('❌ Error in translate command:', error);
             await sock.sendMessage(chatId, {
-                text: '❌ Failed to translate text. Please try again later.\n\nUsage:\n1. Reply to a message with: .translate <lang> or .trt <lang>\n2. Or type: .translate <text> <lang> or .trt <text> <lang>',
+                text: t('translate.failed'),
                 quoted: message
             });
         }

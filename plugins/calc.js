@@ -38,6 +38,7 @@ function safeMath(expr) {
         throw new Error('Result is Infinity or NaN');
     return Number.isInteger(result) ? String(result) : result.toPrecision(10).replace(/\.?0+$/, '');
 }
+import t from '../lib/i18n.js';
 export default {
     command: 'calc',
     aliases: ['math', 'calculate', 'solve'],
@@ -49,30 +50,30 @@ export default {
         const expr = args.join(' ').trim();
         if (!expr) {
             return await sock.sendMessage(chatId, {
-                text: `🧮 *CALCULATOR*\n\n` +
-                    `*Usage:* \`.calc <expression>\`\n\n` +
-                    `*Examples:*\n` +
+                text: `${t('calc.usageTitle')}\n\n` +
+                    `${t('calc.usage')}\n\n` +
+                    `${t('calc.examplesTitle')}\n` +
                     `• \`.calc 2 ** 10\` → 1024\n` +
                     `• \`.calc sqrt(144)\` → 12\n` +
                     `• \`.calc sin(pi / 2)\` → 1\n` +
                     `• \`.calc log(1000)\` → 3\n` +
                     `• \`.calc (3 + 4) * 2\` → 14\n` +
                     `• \`.calc pow(2, 8)\` → 256\n\n` +
-                    `*Functions:* sqrt, cbrt, abs, sin, cos, tan, log, ln, floor, ceil, round, pow, min, max\n` +
-                    `*Constants:* pi, e`,
+                    `${t('calc.functionsLabel')}\n` +
+                    t('calc.constantsLabel'),
                 ...channelInfo
             }, { quoted: message });
         }
         try {
             const result = safeMath(expr);
             await sock.sendMessage(chatId, {
-                text: `🧮 *Calculator*\n\n📥 *Input:* \`${expr}\`\n📤 *Result:* \`${result}\``,
+                text: `${t('calc.title')}\n\n📥 *${t('calc.input')}:* \`${expr}\`\n📤 *${t('calc.result')}:* \`${result}\``,
                 ...channelInfo
             }, { quoted: message });
         }
         catch (error) {
             await sock.sendMessage(chatId, {
-                text: `❌ *Error:* ${error.message}`,
+                text: t('calc.error', { message: error.message }),
                 ...channelInfo
             }, { quoted: message });
         }

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { channelInfo } from '../lib/messageConfig.js';
+import t from '../lib/i18n.js';
 export default {
     command: 'weather',
     aliases: ['forecast', 'climate'],
@@ -11,23 +12,23 @@ export default {
         const city = args.join(' ').trim();
         if (!city) {
             return await sock.sendMessage(chatId, {
-                text: "*Please provide a place to search.*\nExample: .weather Karachi",
+                text: t('weather.usage'),
                 ...channelInfo
             }, { quoted: message });
         }
         try {
             const apiKey = '060a6bcfa19809c2cd4d97a212b19273';
-            const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&units=metric&appid=${apiKey}`);
+            const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&units=metric&lang=pt_br&appid=${apiKey}`);
             const weather = response.data;
-            const weatherText = `ʜᴇʀᴇ ɪs ʏᴏᴜʀ ᴘʟᴀᴄᴇ ᴡᴇᴀᴛʜᴇʀ\n\n` +
-                `「 🌅 」ᴘʟᴀᴄᴇ: ${weather.name}\n` +
-                `「 🗺️ 」ᴄᴏᴜɴᴛʀʏ: ${weather.sys.country}\n` +
-                `「 🌤️ 」ᴠɪᴇᴡ: ${weather.weather[0].description}\n` +
-                `「 🌡️ 」ᴛᴇᴍᴘᴇʀᴀᴛᴜʀᴇ: ${weather.main.temp}°C\n` +
-                `「 💠 」ᴍɪɴɪᴍᴜᴍ ᴛᴇᴍᴘᴇʀᴀᴛᴜʀᴇ: ${weather.main.temp_min}°C\n` +
-                `「 🔥 」ᴍᴀxɪᴍᴜᴍ ᴛᴇᴍᴘᴇʀᴀᴛᴜʀᴇ: ${weather.main.temp_max}°C\n` +
-                `「 💦 」ʜᴜᴍɪᴅɪᴛʏ: ${weather.main.humidity}%\n` +
-                `「 🌬️ 」ᴡɪɴᴅ sᴘᴇᴇᴅ: ${weather.wind.speed} km/h`;
+            const weatherText = `${t('weather.title')}\n\n` +
+                `「 🌅 」${t('weather.place')}: ${weather.name}\n` +
+                `「 🗺️ 」${t('weather.country')}: ${weather.sys.country}\n` +
+                `「 🌤️ 」${t('weather.view')}: ${weather.weather[0].description}\n` +
+                `「 🌡️ 」${t('weather.temp')}: ${weather.main.temp}°C\n` +
+                `「 💠 」${t('weather.minTemp')}: ${weather.main.temp_min}°C\n` +
+                `「 🔥 」${t('weather.maxTemp')}: ${weather.main.temp_max}°C\n` +
+                `「 💦 」${t('weather.humidity')}: ${weather.main.humidity}%\n` +
+                `「 🌬️ 」${t('weather.wind')}: ${weather.wind.speed} km/h`;
             await sock.sendMessage(chatId, {
                 text: weatherText,
                 ...channelInfo
@@ -36,7 +37,7 @@ export default {
         catch (error) {
             console.error('Weather plugin error:', error);
             await sock.sendMessage(chatId, {
-                text: '❌ Sorry, I could not fetch the weather. Make sure the place name is correct.',
+                text: t('weather.error'),
                 ...channelInfo
             }, { quoted: message });
         }
