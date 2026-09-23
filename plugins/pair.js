@@ -7,15 +7,7 @@ export default {
     usage: '.pair 92305395XXXX',
     async handler(sock, message, args, context) {
         const { chatId } = context;
-        const forwardInfo = {
-            forwardingScore: 1,
-            isForwarded: true,
-            forwardedNewsletterMessageInfo: {
-                newsletterJid: '120363319098372999@newsletter',
-                newsletterName: 'MEGA MD',
-                serverMessageId: -1
-            }
-        };
+        const forwardInfo = {};
         const query = args.join('').trim();
         if (!query) {
             return await sock.sendMessage(chatId, {

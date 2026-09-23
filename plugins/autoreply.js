@@ -47,16 +47,7 @@ export async function handleAutoReply(sock, chatId, message, userMessage) {
                 const senderName = message.pushName || 'there';
                 const responseText = reply.response.replace(/\{name\}/gi, senderName);
                 await sock.sendMessage(chatId, {
-                    text: responseText,
-                    contextInfo: {
-                        forwardingScore: 1,
-                        isForwarded: true,
-                        forwardedNewsletterMessageInfo: {
-                            newsletterJid: '120363319098372999@newsletter',
-                            newsletterName: 'GlobalTechInc',
-                            serverMessageId: -1
-                        }
-                    }
+                    text: responseText
                 }, { quoted: message });
                 return true;
             }

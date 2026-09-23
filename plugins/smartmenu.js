@@ -113,18 +113,9 @@ export default {
             menuText += `├─ ${fastEmoji} ${t('smartmenu.fast')}\n`;
             menuText += `├─ ${slowEmoji} ${t('smartmenu.slow')}\n`;
             menuText += `⁠└────────────────`;
-            const contextInfo = {
-                forwardingScore: 1,
-                isForwarded: true,
-                forwardedNewsletterMessageInfo: {
-                    newsletterJid: '120363319098372999@newsletter',
-                    newsletterName: 'GlobalTechInc',
-                    serverMessageId: -1
-                }
-            };
             const messageOptions = thumbnail
-                ? { image: thumbnail, caption: menuText, contextInfo }
-                : { text: menuText, contextInfo };
+                ? { image: thumbnail, caption: menuText }
+                : { text: menuText };
             await sock.sendMessage(chatId, messageOptions, { quoted: message });
         }
         catch (error) {
