@@ -12,13 +12,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 import { smsg } from './lib/myfunc.js';
 import { compileAll } from './lib/compile.js';
-import makeWASocket, { useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, Browsers, jidDecode, jidNormalizedUser, makeCacheableSignalKeyStore, delay } from '@whiskeysockets/baileys';
+import makeWASocket, { useMultiFileAuthState, DisconnectReason, fetchLatestWaWebVersion, Browsers, jidDecode, jidNormalizedUser, makeCacheableSignalKeyStore, delay } from '@whiskeysockets/baileys';
 import NodeCache from 'node-cache';
 import pino from 'pino';
 import config from './config.js';
 import store from './lib/lightweight_store.js';
 import SaveCreds from './lib/session.js';
 import { server, PORT } from './lib/server.js';
+import { botState } from './lib/botState.js';
 import { printLog } from './lib/print.js';
 import { writeErrorLog } from './lib/logger.js';
 import { handleMessages, handleGroupParticipantUpdate, handleStatus, handleCall } from './lib/messageHandler.js';
@@ -76,7 +77,7 @@ catch {
 }
 global.botname = config.botName || "MEGA-MD";
 global.themeemoji = "•";
-const pairingCode = !process.argv.includes("--qr-code");
+const pairingCode = !(process.argv.includes("--qr-code") || process.env.PAIR_MODE === 'qr');
 const useMobile = process.argv.includes("--mobile");
 let rl = null;
 let rlClosed = false;
@@ -183,7 +184,12 @@ server.listen(PORT, () => {
 });
 async function startQasimDev() {
     try {
-        const { version } = await fetchLatestBaileysVersion();
+        // fetchLatestBaileysVersion() only reads whatever version number the
+        // Baileys maintainers last hardcoded in their own repo, which can lag
+        // behind WhatsApp's actual current client version and gets new
+        // device links rejected. fetchLatestWaWebVersion() asks WhatsApp Web
+        // itself for the live version instead.
+        const { version } = await fetchLatestWaWebVersion();
         ensureSessionDirectory();
         await delay(1000);
         const { state, saveCreds } = await useMultiFileAuthState(`./session`);
@@ -405,8 +411,11 @@ async function startQasimDev() {
             const { connection, lastDisconnect, qr } = s;
             if (qr) {
                 if (!pairingCode) {
+                    botState.qr = qr;
                     try {
                         console.log(await QRCode.toString(qr, { type: 'terminal', small: true }));
+                        await QRCode.toFile('./qr.png', qr);
+                        printLog('success', 'QR saved to ./qr.png and available at /');
                     }
                     catch (_e) {
                         console.log('QR:', qr);
@@ -414,6 +423,8 @@ async function startQasimDev() {
                 }
             }
             if (connection === "open") {
+                botState.connected = true;
+                botState.qr = null;
                 printLog('success', 'Bot connected successfully!');
                 try {
                     const setbioModule = await import('./plugins/setbio.js');
@@ -453,6 +464,7 @@ async function startQasimDev() {
                 console.log();
             }
             if (connection === 'close') {
+                botState.connected = false;
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
                 const shouldReconnect = statusCode !== DisconnectReason.loggedOut && statusCode !== 401;
                 if (statusCode === DisconnectReason.loggedOut || statusCode === 401) {

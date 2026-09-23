@@ -1,3 +1,4 @@
+import t from '../lib/i18n.js';
 export default {
     command: 'flirt',
     aliases: ['flirty', 'pickuplines'],
@@ -16,7 +17,7 @@ export default {
         }
         catch (e) {
             console.error('Error in flirt command:', e);
-            await sock.sendMessage(chatId, { text: '❌ Failed to get flirt message. Please try again later!' }, { quoted: message });
+            await sock.sendMessage(chatId, { text: t('flirt.fetchError') }, { quoted: message });
         }
     }
 };
