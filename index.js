@@ -332,7 +332,11 @@ async function startQasimDev() {
         };
         QasimDev.public = true;
         QasimDev.serializeM = (m) => smsg(QasimDev, m, store);
-        const isRegistered = state.creds?.registered === true;
+        // state.creds.registered is unreliable on this Baileys version (stays
+        // false even on live, working LID-based sessions), so also treat a
+        // session with a known identity (creds.me) as already registered —
+        // otherwise every restart re-requests a pairing code needlessly.
+        const isRegistered = state.creds?.registered === true || Boolean(state.creds?.me);
         if (pairingCode && !isRegistered) {
             if (useMobile)
                 throw new Error('Cannot use pairing code with mobile api');
