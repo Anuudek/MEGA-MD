@@ -12,16 +12,13 @@ export default {
         const chatId = context.chatId || message.key.remoteJid;
         try {
             const quotedMsg = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-            if (!quotedMsg) {
-                await sock.sendMessage(chatId, { text: '⚠️ Please reply to an image or video!' }, { quoted: message });
+            const sourceMsg = quotedMsg || message.message;
+            const type = sourceMsg?.imageMessage ? 'imageMessage' : sourceMsg?.videoMessage ? 'videoMessage' : null;
+            if (!type) {
+                await sock.sendMessage(chatId, { text: '⚠️ Please reply to an image/video, or send one with .sticker as the caption!' }, { quoted: message });
                 return;
             }
-            const type = Object.keys(quotedMsg)[0];
-            if (!['imageMessage', 'videoMessage'].includes(type)) {
-                await sock.sendMessage(chatId, { text: '⚠️ Please reply to an image or video!' }, { quoted: message });
-                return;
-            }
-            const stream = await downloadContentFromMessage(quotedMsg[type], type.split('Message')[0]);
+            const stream = await downloadContentFromMessage(sourceMsg[type], type.split('Message')[0]);
             let buffer = Buffer.from([]);
             for await (const chunk of stream)
                 buffer = Buffer.concat([buffer, chunk]);

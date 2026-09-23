@@ -1,6 +1,7 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
+import t from '../lib/i18n.js';
 const execAsync = promisify(exec);
 export default {
     command: 'sudoku',
@@ -13,14 +14,14 @@ export default {
         const scriptPath = path.join(process.cwd(), 'lib', 'sudoku.py');
         if (!args.length || args[0] === 'help') {
             return await sock.sendMessage(chatId, {
-                text: `🧩 *Sudoku*\n\n` +
-                    `*Generate a puzzle:*\n` +
+                text: `${t('sudoku.helpTitle')}\n\n` +
+                    `${t('sudoku.generateTitle')}\n` +
                     `\`.sudoku generate easy\`\n` +
                     `\`.sudoku generate medium\`\n` +
                     `\`.sudoku generate hard\`\n\n` +
-                    `*Solve a puzzle:*\n` +
+                    `${t('sudoku.solveTitle')}\n` +
                     `\`.sudoku solve 530070000600195000098000060800060003400803001700020006060000280000419005000080079\`\n\n` +
-                    `ℹ️ For solve: send 81 digits, use 0 for empty cells`,
+                    t('sudoku.solveHint'),
                 ...channelInfo
             }, { quoted: message });
         }
@@ -29,12 +30,12 @@ export default {
             const difficulty = (args[1] || 'medium').toLowerCase();
             if (!['easy', 'medium', 'hard'].includes(difficulty)) {
                 return await sock.sendMessage(chatId, {
-                    text: `❌ Invalid difficulty. Use: \`easy\`, \`medium\`, or \`hard\``,
+                    text: t('sudoku.invalidDifficulty'),
                     ...channelInfo
                 }, { quoted: message });
             }
             await sock.sendMessage(chatId, {
-                text: `🧩 Generating ${difficulty} puzzle...`,
+                text: t('sudoku.generating', { difficulty }),
                 ...channelInfo
             }, { quoted: message });
             try {
@@ -49,16 +50,16 @@ export default {
                 const diffEmoji = { easy: '🟢', medium: '🟡', hard: '🔴' };
                 await sock.sendMessage(chatId, {
                     text: `🧩 *Sudoku — ${diffEmoji[difficulty]} ${difficulty.toUpperCase()}*\n` +
-                        `📊 *Clues:* ${data.clues}/81\n\n` +
-                        `*Puzzle:*\n\`\`\`\n${data.formatted_puzzle}\n\`\`\`\n\n` +
-                        `*Puzzle code (to solve later):*\n\`${data.puzzle}\`\n\n` +
-                        `_Use \`.sudoku solve ${data.puzzle}\` to reveal solution_`,
+                        `📊 *${t('sudoku.clues')}:* ${data.clues}/81\n\n` +
+                        `${t('sudoku.puzzleLabel')}\n\`\`\`\n${data.formatted_puzzle}\n\`\`\`\n\n` +
+                        `${t('sudoku.codeLabel')}\n\`${data.puzzle}\`\n\n` +
+                        t('sudoku.solveHintUse', { code: data.puzzle }),
                     ...channelInfo
                 }, { quoted: message });
             }
             catch (error) {
                 await sock.sendMessage(chatId, {
-                    text: `❌ Failed to generate: ${error.message}`,
+                    text: t('sudoku.generateFailed', { message: error.message }),
                     ...channelInfo
                 }, { quoted: message });
             }
@@ -67,18 +68,18 @@ export default {
             const grid = args[1]?.trim();
             if (!grid) {
                 return await sock.sendMessage(chatId, {
-                    text: `❌ Provide a puzzle code (81 digits, 0 = empty)\n\nExample:\n\`.sudoku solve 530070000600195000...\``,
+                    text: t('sudoku.provideCode'),
                     ...channelInfo
                 }, { quoted: message });
             }
             if (!/^[0-9]{81}$/.test(grid)) {
                 return await sock.sendMessage(chatId, {
-                    text: `❌ Puzzle must be exactly 81 digits (0-9). Got ${grid.length} characters.`,
+                    text: t('sudoku.invalidLength', { length: grid.length }),
                     ...channelInfo
                 }, { quoted: message });
             }
             await sock.sendMessage(chatId, {
-                text: `🔍 Solving puzzle...`,
+                text: t('sudoku.solving'),
                 ...channelInfo
             }, { quoted: message });
             try {
@@ -91,23 +92,23 @@ export default {
                     }, { quoted: message });
                 }
                 await sock.sendMessage(chatId, {
-                    text: `🧩 *Sudoku Solved!*\n` +
-                        `✅ *Filled:* ${data.filled} empty cells\n\n` +
-                        `*Puzzle:*\n\`\`\`\n${data.formatted_puzzle}\n\`\`\`\n\n` +
-                        `*Solution:*\n\`\`\`\n${data.formatted_solution}\n\`\`\``,
+                    text: `${t('sudoku.solvedTitle')}\n` +
+                        `✅ *${t('sudoku.filled')}:* ${data.filled} ${t('sudoku.emptyCells')}\n\n` +
+                        `${t('sudoku.puzzleLabel')}\n\`\`\`\n${data.formatted_puzzle}\n\`\`\`\n\n` +
+                        `${t('sudoku.solutionLabel')}\n\`\`\`\n${data.formatted_solution}\n\`\`\``,
                     ...channelInfo
                 }, { quoted: message });
             }
             catch (error) {
                 await sock.sendMessage(chatId, {
-                    text: `❌ Failed to solve: ${error.message}`,
+                    text: t('sudoku.solveFailed', { message: error.message }),
                     ...channelInfo
                 }, { quoted: message });
             }
         }
         else {
             await sock.sendMessage(chatId, {
-                text: `❌ Unknown subcommand: *${subCmd}*\nUse \`generate\` or \`solve\``,
+                text: t('sudoku.unknownSubcommand', { cmd: subCmd }),
                 ...channelInfo
             }, { quoted: message });
         }

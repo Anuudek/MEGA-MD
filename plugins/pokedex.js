@@ -1,3 +1,4 @@
+import t from '../lib/i18n.js';
 export default {
     command: 'pokedex',
     aliases: ['pokemon', 'poke'],
@@ -9,7 +10,7 @@ export default {
         const text = args.join(' ').trim();
         if (!text) {
             return await sock.sendMessage(chatId, {
-                text: '*Please provide a Pokémon name to search for.*\nExample: `.pokedex pikachu`'
+                text: t('pokedex.usage')
             }, { quoted: message });
         }
         try {
@@ -19,21 +20,21 @@ export default {
             if (!res.ok)
                 throw json.error || 'Unknown error';
             const messageText = `
-*≡ Name:* ${json.name}
+*≡ ${t('pokedex.name')}:* ${json.name}
 *≡ ID:* ${json.id}
-*≡ Type:* ${Array.isArray(json.type) ? json.type.join(', ') : json.type}
-*≡ Abilities:* ${Array.isArray(json.abilities) ? json.abilities.join(', ') : json.abilities}
-*≡ Species:* ${Array.isArray(json.species) ? json.species.join(', ') : json.species}
-*≡ Height:* ${json.height}
-*≡ Weight:* ${json.weight}
-*≡ Experience:* ${json.base_experience}
-*≡ Description:* ${json.description}
+*≡ ${t('pokedex.type')}:* ${Array.isArray(json.type) ? json.type.join(', ') : json.type}
+*≡ ${t('pokedex.abilities')}:* ${Array.isArray(json.abilities) ? json.abilities.join(', ') : json.abilities}
+*≡ ${t('pokedex.species')}:* ${Array.isArray(json.species) ? json.species.join(', ') : json.species}
+*≡ ${t('pokedex.height')}:* ${json.height}
+*≡ ${t('pokedex.weight')}:* ${json.weight}
+*≡ ${t('pokedex.experience')}:* ${json.base_experience}
+*≡ ${t('pokedex.description')}:* ${json.description}
       `.trim();
             await sock.sendMessage(chatId, { text: messageText, quoted: message });
         }
         catch (error) {
             console.error('Pokedex Command Error:', error);
-            await sock.sendMessage(chatId, { text: `❌ Error: ${error}` }, { quoted: message });
+            await sock.sendMessage(chatId, { text: t('pokedex.error', { error }) }, { quoted: message });
         }
     }
 };
