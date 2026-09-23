@@ -12,6 +12,7 @@
  *                 Unauthorized copying or distribution is prohibited.       *
  *                                                                           *
  *****************************************************************************/
+import t from '../lib/i18n.js';
 export default {
     command: 'flip',
     aliases: ['mirror', 'upside'],
@@ -27,7 +28,7 @@ export default {
         }
         txt = txt.replace(/^\.\w+\s*/, '').trim();
         if (!txt)
-            return await sock.sendMessage(chatId, { text: '*What should I flip?*' });
+            return await sock.sendMessage(chatId, { text: t('flip.whatToFlip') });
         const charMap = {
             'a': 'ɐ', 'b': 'q', 'c': 'ɔ', 'd': 'p', 'e': 'ǝ', 'f': 'ɟ', 'g': 'ƃ', 'h': 'ɥ', 'i': 'ᴉ', 'j': 'ɾ',
             'k': 'ʞ', 'l': 'l', 'm': 'ɯ', 'n': 'u', 'o': 'o', 'p': 'd', 'q': 'b', 'r': 'ɹ', 's': 's', 't': 'ʇ',

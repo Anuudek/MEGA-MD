@@ -1,3 +1,4 @@
+import t from '../lib/i18n.js';
 export default {
     command: 'meme',
     aliases: ['cheems', 'memes'],
@@ -14,19 +15,19 @@ export default {
             if (contentType && contentType.includes('image')) {
                 const imageBuffer = Buffer.from(await res.arrayBuffer());
                 const buttons = [
-                    { buttonId: '.meme', buttonText: { displayText: '🎭 Another Meme' }, type: 1 },
-                    { buttonId: '.joke', buttonText: { displayText: '😄 Joke' }, type: 1 }
+                    { buttonId: '.meme', buttonText: { displayText: t('meme.anotherMeme') }, type: 1 },
+                    { buttonId: '.joke', buttonText: { displayText: t('meme.jokeButton') }, type: 1 }
                 ];
                 await sock.sendMessage(chatId, {
                     image: imageBuffer,
-                    caption: "🐕 > Here's your cheems meme!",
+                    caption: t('meme.caption'),
                     buttons,
                     headerType: 1
                 }, { quoted: message });
             }
             else {
                 await sock.sendMessage(chatId, {
-                    text: '❌ The API did not return a valid image.',
+                    text: t('meme.invalidImage'),
                     quoted: message
                 });
             }
@@ -34,7 +35,7 @@ export default {
         catch (error) {
             console.error('Meme Command Error:', error);
             await sock.sendMessage(chatId, {
-                text: '❌ Failed to fetch meme. Please try again later.',
+                text: t('meme.error'),
                 quoted: message
             });
         }

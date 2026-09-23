@@ -1,3 +1,4 @@
+import t from '../lib/i18n.js';
 export default {
     command: 'dado',
     aliases: ['dados', 'dice'],
@@ -24,7 +25,7 @@ export default {
             console.error('Dice Plugin Error:', e);
             await sock.sendMessage(chatId, {
                 image: { url: randomDice },
-                caption: '🎲 The dice rolled!'
+                caption: t('dado.rolled')
             }, { quoted: message });
         }
     }
