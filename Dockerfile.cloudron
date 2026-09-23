@@ -1,7 +1,7 @@
 FROM cloudron/base:5.0.0
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl ffmpeg python3 build-essential git && \
+    apt-get install -y --no-install-recommends apt-utils curl ffmpeg python3 build-essential git && \
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y --no-install-recommends nodejs && \
     rm -rf /var/lib/apt/lists/*
@@ -10,7 +10,7 @@ RUN mkdir -p /app/code /app/pkg
 WORKDIR /app/code
 
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev --loglevel=error --no-fund
 
 COPY . /app/code
 COPY start.sh /app/pkg/start.sh
