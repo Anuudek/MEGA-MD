@@ -127,15 +127,12 @@ function hasValidSession() {
                 printLog('warning', 'creds.json is missing required fields');
                 return false;
             }
-            if (creds.registered === false) {
-                printLog('warning', 'Session not registered. Clearing for fresh pairing...');
-                try {
-                    rmSync(path.join(__dirname, 'session'), { recursive: true, force: true });
-                }
-                catch (_e) { /* ignore */ }
-                return false;
-            }
-            printLog('success', 'Valid and registered session credentials found');
+            // Note: creds.registered is not a reliable signal on this Baileys
+            // version (observed staying false on live, working LID-based
+            // sessions where creds.me is already populated). Relying on it
+            // was wiping good sessions and forcing re-pairing on every
+            // restart, so we only check for the actual key material above.
+            printLog('success', 'Valid session credentials found');
             return true;
         }
         catch (_parseError) {
