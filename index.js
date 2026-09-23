@@ -128,15 +128,17 @@ function hasValidSession() {
                 printLog('warning', 'creds.json is missing required fields');
                 return false;
             }
-            if (creds.registered === false) {
-                printLog('warning', 'Session not registered. Clearing for fresh pairing...');
-                try {
-                    rmSync(path.join(__dirname, 'session'), { recursive: true, force: true });
-                }
-                catch (_e) { /* ignore */ }
-                return false;
-            }
-            printLog('success', 'Valid and registered session credentials found');
+            // creds.registered has been observed staying false even on
+            // sessions that paired successfully and worked (both via pairing
+            // code and QR). Wiping the session whenever it's false forces a
+            // fresh pairing on every single restart. That was reverted once
+            // before because relying only on creds.me risked spamming
+            // WhatsApp with pairing-code requests against a stale identity —
+            // but we're on QR pairing now, where an invalid identity just
+            // fails to reconnect quietly and falls back to a fresh QR,
+            // without repeated requests to WhatsApp. So it's safe here to
+            // just trust the key material and let Baileys itself decide.
+            printLog('success', 'Valid session credentials found');
             return true;
         }
         catch (_parseError) {
