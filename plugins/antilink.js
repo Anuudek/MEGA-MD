@@ -1,6 +1,7 @@
 import store from '../lib/lightweight_store.js';
 import isOwnerOrSudo from '../lib/isOwner.js';
 import isAdmin from '../lib/isAdmin.js';
+import t from '../lib/i18n.js';
 async function setAntilink(chatId, type, action) {
     try {
         await store.saveSetting(chatId, 'antilink', {
@@ -66,19 +67,19 @@ export async function handleLinkDetection(sock, chatId, message, userMessage, se
         };
         if (linkPatterns.whatsappGroup.test(userMessage)) {
             shouldAct = true;
-            linkType = 'WhatsApp Group';
+            linkType = t('antilink.linkTypeWhatsappGroup');
         }
         else if (linkPatterns.whatsappChannel.test(userMessage)) {
             shouldAct = true;
-            linkType = 'WhatsApp Channel';
+            linkType = t('antilink.linkTypeWhatsappChannel');
         }
         else if (linkPatterns.telegram.test(userMessage)) {
             shouldAct = true;
-            linkType = 'Telegram';
+            linkType = t('antilink.linkTypeTelegram');
         }
         else if (linkPatterns.allLinks.test(userMessage)) {
             shouldAct = true;
-            linkType = 'Link';
+            linkType = t('antilink.linkTypeGeneric');
         }
         if (!shouldAct)
             return;
@@ -101,7 +102,7 @@ export async function handleLinkDetection(sock, chatId, message, userMessage, se
         }
         if (action === 'warn' || action === 'delete') {
             await sock.sendMessage(chatId, {
-                text: `⚠️ *Antilink Warning*\n\n@${senderId.split('@')[0]}, posting ${linkType} links is not allowed!`,
+                text: t('antilink.warningMsg', { user: senderId.split('@')[0], linkType }),
                 mentions: [senderId]
             });
         }
@@ -109,14 +110,14 @@ export async function handleLinkDetection(sock, chatId, message, userMessage, se
             try {
                 await sock.groupParticipantsUpdate(chatId, [senderId], 'remove');
                 await sock.sendMessage(chatId, {
-                    text: `🚫 @${senderId.split('@')[0]} has been removed for posting ${linkType} links.`,
+                    text: t('antilink.kickedMsg', { user: senderId.split('@')[0], linkType }),
                     mentions: [senderId]
                 });
             }
             catch (error) {
                 console.error('Failed to kick user:', error);
                 await sock.sendMessage(chatId, {
-                    text: `⚠️ Failed to remove user. Make sure the bot is an admin.`
+                    text: t('antilink.kickFailed')
                 });
             }
         }
@@ -139,21 +140,21 @@ export default {
         if (!action) {
             const config = await getAntilink(chatId, 'on');
             await sock.sendMessage(chatId, {
-                text: `*🔗 ANTILINK SETUP*\n\n` +
-                    `*Current Status:* ${config?.enabled ? '✅ Enabled' : '❌ Disabled'}\n` +
-                    `*Current Action:* ${config?.action || 'Not set'}\n\n` +
-                    `*Commands:*\n` +
-                    `• \`.antilink on\` - Enable antilink\n` +
-                    `• \`.antilink off\` - Disable antilink\n` +
-                    `• \`.antilink set delete\` - Delete link messages\n` +
-                    `• \`.antilink set kick\` - Kick users who send links\n` +
-                    `• \`.antilink set warn\` - Warn users only\n\n` +
-                    `*Protected Links:*\n` +
-                    `• WhatsApp Groups\n` +
-                    `• WhatsApp Channels\n` +
-                    `• Telegram\n` +
-                    `• All other links\n\n` +
-                    `*Note:* Admins, Owner, and Sudo users are exempt.`
+                text: `${t('antilink.setupTitle')}\n\n` +
+                    `*${t('antilink.currentStatus')}:* ${config?.enabled ? t('antilink.enabled') : t('antilink.disabled')}\n` +
+                    `*${t('antilink.currentAction')}:* ${config?.action || t('antilink.notSet')}\n\n` +
+                    `*${t('antilink.commands')}:*\n` +
+                    `• ${t('antilink.cmdOn')}\n` +
+                    `• ${t('antilink.cmdOff')}\n` +
+                    `• ${t('antilink.cmdSetDelete')}\n` +
+                    `• ${t('antilink.cmdSetKick')}\n` +
+                    `• ${t('antilink.cmdSetWarn')}\n\n` +
+                    `*${t('antilink.protectedLinks')}:*\n` +
+                    `• ${t('antilink.whatsappGroups')}\n` +
+                    `• ${t('antilink.whatsappChannels')}\n` +
+                    `• ${t('antilink.telegram')}\n` +
+                    `• ${t('antilink.otherLinks')}\n\n` +
+                    t('antilink.exemptNote')
             }, { quoted: message });
             return;
         }
@@ -162,64 +163,64 @@ export default {
                 const existingConfig = await getAntilink(chatId, 'on');
                 if (existingConfig?.enabled) {
                     await sock.sendMessage(chatId, {
-                        text: '⚠️ *Antilink is already enabled*'
+                        text: t('antilink.alreadyEnabled')
                     }, { quoted: message });
                     return;
                 }
                 const result = await setAntilink(chatId, 'on', 'delete');
                 await sock.sendMessage(chatId, {
-                    text: result ? '✅ *Antilink enabled successfully!*\n\nDefault action: Delete messages\n\n*Exempt:* Admins, Owner, Sudo users' : '❌ *Failed to enable antilink*'
+                    text: result ? t('antilink.enabledSuccess') : t('antilink.enableFailed')
                 }, { quoted: message });
                 break;
             case 'off':
                 await removeAntilink(chatId, 'on');
                 await sock.sendMessage(chatId, {
-                    text: '❌ *Antilink disabled*\n\nUsers can now send links freely.'
+                    text: t('antilink.disabledMsg')
                 }, { quoted: message });
                 break;
             case 'set':
                 if (args.length < 2) {
                     await sock.sendMessage(chatId, {
-                        text: '❌ *Please specify an action*\n\nUsage: `.antilink set delete | kick | warn`'
+                        text: t('antilink.specifyAction')
                     }, { quoted: message });
                     return;
                 }
                 const setAction = args[1].toLowerCase();
                 if (!['delete', 'kick', 'warn'].includes(setAction)) {
                     await sock.sendMessage(chatId, {
-                        text: '❌ *Invalid action*\n\nChoose: delete, kick, or warn'
+                        text: t('antilink.invalidAction')
                     }, { quoted: message });
                     return;
                 }
                 const setResult = await setAntilink(chatId, 'on', setAction);
                 const actionDescriptions = {
-                    delete: 'Delete link messages and warn users',
-                    kick: 'Delete messages and remove users',
-                    warn: 'Only send warning messages'
+                    delete: t('antilink.actionDeleteDesc'),
+                    kick: t('antilink.actionKickDesc'),
+                    warn: t('antilink.actionWarnDesc')
                 };
                 await sock.sendMessage(chatId, {
                     text: setResult
-                        ? `✅ *Antilink action set to: ${setAction}*\n\n${actionDescriptions[setAction]}\n\n*Exempt:* Admins, Owner, Sudo users`
-                        : '❌ *Failed to set antilink action*'
+                        ? `${t('antilink.actionSet', { action: setAction })}\n\n${actionDescriptions[setAction]}\n\n${t('antilink.exemptNote')}`
+                        : t('antilink.setFailed')
                 }, { quoted: message });
                 break;
             case 'status':
             case 'get':
                 const status = await getAntilink(chatId, 'on');
                 await sock.sendMessage(chatId, {
-                    text: `*🔗 ANTILINK STATUS*\n\n` +
-                        `*Status:* ${status?.enabled ? '✅ Enabled' : '❌ Disabled'}\n` +
-                        `*Action:* ${status?.action || 'Not set'}\n\n` +
-                        `*What happens when links are detected:*\n` +
-                        `${status?.action === 'delete' ? '• Message is deleted\n• User gets warning' : ''}` +
-                        `${status?.action === 'kick' ? '• Message is deleted\n• User is removed from group' : ''}` +
-                        `${status?.action === 'warn' ? '• User gets warning\n• Message stays' : ''}\n\n` +
-                        `*Exempt:* Admins, Owner, Sudo users`
+                    text: `${t('antilink.statusTitle')}\n\n` +
+                        `*${t('antilink.status')}:* ${status?.enabled ? t('antilink.enabled') : t('antilink.disabled')}\n` +
+                        `*${t('antilink.action')}:* ${status?.action || t('antilink.notSet')}\n\n` +
+                        `*${t('antilink.whatHappens')}:*\n` +
+                        `${status?.action === 'delete' ? t('antilink.deleteExplain') : ''}` +
+                        `${status?.action === 'kick' ? t('antilink.kickExplain') : ''}` +
+                        `${status?.action === 'warn' ? t('antilink.warnExplain') : ''}\n\n` +
+                        t('antilink.exemptNote')
                 }, { quoted: message });
                 break;
             default:
                 await sock.sendMessage(chatId, {
-                    text: '❌ *Invalid command*\n\nUse `.antilink` to see available options.'
+                    text: t('antilink.invalidCommand')
                 }, { quoted: message });
         }
     },

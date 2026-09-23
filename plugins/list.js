@@ -16,6 +16,7 @@ import config from '../config.js';
 import commandHandler from '../lib/commandHandler.js';
 import path from 'path';
 import fs from 'fs';
+import i18n from '../lib/i18n.js';
 function formatTime() {
     const now = new Date();
     const options = {
@@ -30,11 +31,11 @@ const menuStyles = [
     {
         render({ _title, info, categories, prefix }) {
             let t = `╭━━『 *MEGA MENU* 』━⬣\n`;
-            t += `┃ ✨ *Bot: ${info.bot}*\n`;
-            t += `┃ 🔧 *Prefix: ${info.prefix}*\n`;
-            t += `┃ 📦 *Plugin: ${info.total}*\n`;
-            t += `┃ 💎 *Version: ${info.version}*\n`;
-            t += `┃ ⏰ *Time: ${info.time}*\n`;
+            t += `┃ ✨ *${info.botLabel}: ${info.bot}*\n`;
+            t += `┃ 🔧 *${info.prefixLabel}: ${info.prefix}*\n`;
+            t += `┃ 📦 *${info.pluginsLabel}: ${info.total}*\n`;
+            t += `┃ 💎 *${info.versionLabel}: ${info.version}*\n`;
+            t += `┃ ⏰ *${info.timeLabel}: ${info.time}*\n`;
             for (const [cat, cmds] of categories) {
                 t += `┃━━━ *${cat.toUpperCase()}* ━✦\n`;
                 for (const c of cmds)
@@ -47,11 +48,11 @@ const menuStyles = [
     {
         render({ _title, info, categories, prefix }) {
             let t = `◈╭─❍「 *MEGA MENU* 」❍\n`;
-            t += `◈├• 🌟 *Bot: ${info.bot}*\n`;
-            t += `◈├• ⚙️ *Prefix: ${info.prefix}*\n`;
-            t += `◈├• 🍫 *Plugins: ${info.total}*\n`;
-            t += `◈├• 💎 *Version: ${info.version}*\n`;
-            t += `◈├• ⏰ *Time: ${info.time}*\n`;
+            t += `◈├• 🌟 *${info.botLabel}: ${info.bot}*\n`;
+            t += `◈├• ⚙️ *${info.prefixLabel}: ${info.prefix}*\n`;
+            t += `◈├• 🍫 *${info.pluginsLabel}: ${info.total}*\n`;
+            t += `◈├• 💎 *${info.versionLabel}: ${info.version}*\n`;
+            t += `◈├• ⏰ *${info.timeLabel}: ${info.time}*\n`;
             for (const [cat, cmds] of categories) {
                 t += `◈├─❍「 *${cat.toUpperCase()}* 」❍\n`;
                 for (const c of cmds)
@@ -64,11 +65,11 @@ const menuStyles = [
     {
         render({ _title, info, categories, prefix }) {
             let t = `┏━━━━ *MEGA MENU* ━━━┓\n`;
-            t += `┃• *Bot : ${info.bot}*\n`;
-            t += `┃• *Prefixes : ${info.prefix}*\n`;
-            t += `┃• *Plugins : ${info.total}*\n`;
-            t += `┃• *Version : ${info.version}*\n`;
-            t += `┃• *Time : ${info.time}*\n`;
+            t += `┃• *${info.botLabel} : ${info.bot}*\n`;
+            t += `┃• *${info.prefixLabel} : ${info.prefix}*\n`;
+            t += `┃• *${info.pluginsLabel} : ${info.total}*\n`;
+            t += `┃• *${info.versionLabel} : ${info.version}*\n`;
+            t += `┃• *${info.timeLabel} : ${info.time}*\n`;
             for (const [cat, cmds] of categories) {
                 t += `┃━━━━ *${cat.toUpperCase()}* ━━◆\n`;
                 for (const c of cmds)
@@ -81,11 +82,11 @@ const menuStyles = [
     {
         render({ _title, info, categories, prefix }) {
             let t = `✦═══ *MEGA MENU* ═══✦\n`;
-            t += `║➩ *Bot: ${info.bot}*\n`;
-            t += `║➩ *Prefixes: ${info.prefix}*\n`;
-            t += `║➩ *Plugins: ${info.total}*\n`;
-            t += `║➩ *Version: ${info.version}*\n`;
-            t += `║➩ *Time: ${info.time}*\n`;
+            t += `║➩ *${info.botLabel}: ${info.bot}*\n`;
+            t += `║➩ *${info.prefixLabel}: ${info.prefix}*\n`;
+            t += `║➩ *${info.pluginsLabel}: ${info.total}*\n`;
+            t += `║➩ *${info.versionLabel}: ${info.version}*\n`;
+            t += `║➩ *${info.timeLabel}: ${info.time}*\n`;
             for (const [cat, cmds] of categories) {
                 t += `║══ *${cat.toUpperCase()}* ══✧\n`;
                 for (const c of cmds)
@@ -98,11 +99,11 @@ const menuStyles = [
     {
         render({ _title, info, categories, prefix }) {
             let t = `❀━━━ *MEGA MENU* ━━━❀\n`;
-            t += `┃☞ *Bot: ${info.bot}*\n`;
-            t += `┃☞ *Prefixes: ${info.prefix}*\n`;
-            t += `┃☞ *Plugins: ${info.total}*\n`;
-            t += `┃☞ *Version: ${info.version}*\n`;
-            t += `┃☞ *Time: ${info.time}*\n`;
+            t += `┃☞ *${info.botLabel}: ${info.bot}*\n`;
+            t += `┃☞ *${info.prefixLabel}: ${info.prefix}*\n`;
+            t += `┃☞ *${info.pluginsLabel}: ${info.total}*\n`;
+            t += `┃☞ *${info.versionLabel}: ${info.version}*\n`;
+            t += `┃☞ *${info.timeLabel}: ${info.time}*\n`;
             for (const [cat, cmds] of categories) {
                 t += `┃━━━〔 *${cat.toUpperCase()}* 〕━❀\n`;
                 for (const c of cmds)
@@ -115,11 +116,11 @@ const menuStyles = [
     {
         render({ _title, info, categories, prefix }) {
             let t = `◆━━━ *MEGA MENU* ━━━◆\n`;
-            t += `┃ ¤ *Bot: ${info.bot}*\n`;
-            t += `┃ ¤ *Prefixes: ${info.prefix}*\n`;
-            t += `┃ ¤ *Plugins: ${info.total}*\n`;
-            t += `┃ ¤ *Version: ${info.version}*\n`;
-            t += `┃ ¤ *Time: ${info.time}*\n`;
+            t += `┃ ¤ *${info.botLabel}: ${info.bot}*\n`;
+            t += `┃ ¤ *${info.prefixLabel}: ${info.prefix}*\n`;
+            t += `┃ ¤ *${info.pluginsLabel}: ${info.total}*\n`;
+            t += `┃ ¤ *${info.versionLabel}: ${info.version}*\n`;
+            t += `┃ ¤ *${info.timeLabel}: ${info.time}*\n`;
             for (const [cat, cmds] of categories) {
                 t += `┃━━ *${cat.toUpperCase()}* ━━◆◆\n`;
                 for (const c of cmds)
@@ -132,11 +133,11 @@ const menuStyles = [
     {
         render({ _title, info, categories, prefix }) {
             let t = `╭───⬣ *MEGA MENU* ──⬣\n`;
-            t += ` | ● *Bot: ${info.bot}*\n`;
-            t += ` | ● *Prefixes: ${info.prefix}*\n`;
-            t += ` | ● *Plugins: ${info.total}*\n`;
-            t += ` | ● *Version: ${info.version}*\n`;
-            t += ` | ● *Time: ${info.time}*\n`;
+            t += ` | ● *${info.botLabel}: ${info.bot}*\n`;
+            t += ` | ● *${info.prefixLabel}: ${info.prefix}*\n`;
+            t += ` | ● *${info.pluginsLabel}: ${info.total}*\n`;
+            t += ` | ● *${info.versionLabel}: ${info.version}*\n`;
+            t += ` | ● *${info.timeLabel}: ${info.time}*\n`;
             for (const [cat, cmds] of categories) {
                 t += ` |───⬣ *${cat.toUpperCase()}* ──⬣\n`;
                 for (const c of cmds)
@@ -167,18 +168,18 @@ export default {
             }
             if (!cmd) {
                 return sock.sendMessage(chatId, {
-                    text: `❌ Command "${args[0]}" not found.\n\nUse ${prefix}menu to see all commands.`,
+                    text: i18n('list.notFound', { cmd: args[0], prefix }),
                     ...channelInfo
                 }, { quoted: message });
             }
             const text = `╭━━━━━━━━━━━━━━⬣
-┃ 📌 *COMMAND INFO*
+┃ 📌 *${i18n('list.infoTitle')}*
 ┃
-┃ ⚡ *Command:* ${prefix}${cmd.command}
-┃ 📝 *Desc:* ${cmd.description || 'No description'}
-┃ 📖 *Usage:* ${cmd.usage || `${prefix}${cmd.command}`}
-┃ 🏷️ *Category:* ${cmd.category || 'misc'}
-┃ 🔖 *Aliases:* ${cmd.aliases?.length ? cmd.aliases.map((a) => prefix + a).join(', ') : 'None'}
+┃ ⚡ *${i18n('list.command')}:* ${prefix}${cmd.command}
+┃ 📝 *${i18n('list.desc')}:* ${cmd.description || i18n('list.noDescription')}
+┃ 📖 *${i18n('list.usage')}:* ${cmd.usage || `${prefix}${cmd.command}`}
+┃ 🏷️ *${i18n('list.category')}:* ${cmd.category || 'misc'}
+┃ 🔖 *${i18n('list.aliases')}:* ${cmd.aliases?.length ? cmd.aliases.map((a) => prefix + a).join(', ') : i18n('list.none')}
 ┃
 ╰━━━━━━━━━━━━━━⬣`;
             if (fs.existsSync(imagePath)) {
@@ -199,7 +200,12 @@ export default {
                 prefix: config.prefixes.join(', '),
                 total: commandHandler.commands.size,
                 version: config.version || "6.0.0",
-                time: formatTime()
+                time: formatTime(),
+                botLabel: i18n('list.bot'),
+                prefixLabel: i18n('list.prefix'),
+                pluginsLabel: i18n('list.plugins'),
+                versionLabel: i18n('list.version'),
+                timeLabel: i18n('list.time')
             },
             categories: commandHandler.categories
         });

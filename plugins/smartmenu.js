@@ -2,6 +2,7 @@ import config from '../config.js';
 import CommandHandler from '../lib/commandHandler.js';
 import fs from 'fs';
 import path from 'path';
+import t from '../lib/i18n.js';
 const menuEmojis = ['✨', '🌟', '⭐', '💫', '🎯', '🎨', '🎪', '🎭'];
 const activeEmojis = ['✅', '🟢', '💚', '✔️', '☑️'];
 const disabledEmojis = ['❌', '🔴', '⛔', '🚫', '❎'];
@@ -66,19 +67,19 @@ export default {
             const slowEmoji = getRandomEmoji(slowEmojis);
             let menuText = `${menuEmoji} *${config.botName || 'MEGA-MD'}* ${menuEmoji}\n\n`;
             menuText += `┏━━━━━━━━━━━━━━━━┓\n`;
-            menuText += `┃ 📱 *Bot:* ${config.botName || 'MEGA-MD'}\n`;
-            menuText += `┃ 🔖 *Version:* ${config.version || '6.0.0'}\n`;
-            menuText += `┃ 👤 *Owner:* ${config.botOwner || 'Unknown'}\n`;
-            menuText += `┃ ⏰ *Time:* ${formatTime()}\n`;
-            menuText += `┃ ℹ️ *Prefix:* ${config.prefixes ? config.prefixes.join(', ') : '.'}\n`;
-            menuText += `┃ 📊 *Plugins:* ${CommandHandler.commands.size}\n`;
+            menuText += `┃ 📱 *${t('smartmenu.bot')}:* ${config.botName || 'MEGA-MD'}\n`;
+            menuText += `┃ 🔖 *${t('smartmenu.version')}:* ${config.version || '6.0.0'}\n`;
+            menuText += `┃ 👤 *${t('smartmenu.owner')}:* ${config.botOwner || 'Unknown'}\n`;
+            menuText += `┃ ⏰ *${t('smartmenu.time')}:* ${formatTime()}\n`;
+            menuText += `┃ ℹ️ *${t('smartmenu.prefix')}:* ${config.prefixes ? config.prefixes.join(', ') : '.'}\n`;
+            menuText += `┃ 📊 *${t('smartmenu.plugins')}:* ${CommandHandler.commands.size}\n`;
             menuText += `┗━━━━━━━━━━━━━━━━┛\n\n`;
             const topCmds = stats.slice(0, 3).filter(s => s.usage > 0);
             if (topCmds.length > 0) {
-                menuText += `🔥 *TOP COMMANDS:*\n`;
+                menuText += `🔥 *${t('smartmenu.topCommands')}:*\n`;
                 topCmds.forEach((c, i) => {
                     const rank = i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉';
-                    menuText += `${rank} .${c.command} • ${c.usage} uses\n`;
+                    menuText += `${rank} .${c.command} • ${c.usage} ${t('smartmenu.uses')}\n`;
                 });
                 menuText += `\n`;
             }
@@ -106,11 +107,11 @@ export default {
                 menuText += `\n`;
             }
             menuText += `┌────────────────\n`;
-            menuText += `├  💡 *LEGEND*\n`;
-            menuText += `├─ ${activeEmoji} Active Command\n`;
-            menuText += `├─ ${disabledEmoji} Disabled Command\n`;
-            menuText += `├─ ${fastEmoji} Fast Response\n`;
-            menuText += `├─ ${slowEmoji} Slow Response\n`;
+            menuText += `├  💡 *${t('smartmenu.legend')}*\n`;
+            menuText += `├─ ${activeEmoji} ${t('smartmenu.active')}\n`;
+            menuText += `├─ ${disabledEmoji} ${t('smartmenu.disabled')}\n`;
+            menuText += `├─ ${fastEmoji} ${t('smartmenu.fast')}\n`;
+            menuText += `├─ ${slowEmoji} ${t('smartmenu.slow')}\n`;
             menuText += `⁠└────────────────`;
             const contextInfo = {
                 forwardingScore: 1,
@@ -129,7 +130,7 @@ export default {
         catch (error) {
             console.error('Menu Error:', error);
             await sock.sendMessage(chatId, {
-                text: `❌ *Menu Error*\n\n${error.message}`
+                text: `❌ *${t('smartmenu.error')}*\n\n${error.message}`
             }, { quoted: message });
         }
     }

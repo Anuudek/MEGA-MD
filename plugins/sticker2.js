@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import webp from 'node-webpmux';
 import crypto from 'crypto';
+import t from '../lib/i18n.js';
 export default {
     command: 'sticker2',
     aliases: ['s2', 'stik2'],
@@ -28,7 +29,7 @@ export default {
         const mediaMessage = targetMessage.message?.imageMessage || targetMessage.message?.videoMessage || targetMessage.message?.documentMessage;
         if (!mediaMessage) {
             await sock.sendMessage(chatId, {
-                text: 'Please reply to an image/video with .sticker2, or send an image/video with .sticker2 as the caption.',
+                text: t('sticker2.usage'),
                 ...channelInfo
             }, { quoted: messageToQuote });
             return;
@@ -40,7 +41,7 @@ export default {
             });
             if (!mediaBuffer) {
                 await sock.sendMessage(chatId, {
-                    text: 'Failed to download media. Please try again.',
+                    text: t('sticker2.downloadFailed'),
                     ...channelInfo
                 }, { quoted: messageToQuote });
                 return;
@@ -148,7 +149,7 @@ export default {
         catch (error) {
             console.error('Error in sticker command:', error);
             await sock.sendMessage(chatId, {
-                text: 'Failed to create sticker! Try again later.',
+                text: t('sticker2.createFailed'),
                 ...channelInfo
             }, { quoted: messageToQuote });
         }

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import t from '../lib/i18n.js';
 const triviaGames = {};
 export default {
     command: 'trivia',
@@ -11,7 +12,7 @@ export default {
         if (args.length === 0) {
             if (triviaGames[chatId]) {
                 await sock.sendMessage(chatId, {
-                    text: 'A trivia game is already in progress!',
+                    text: t('trivia.alreadyInProgress'),
                     ...channelInfo
                 }, { quoted: message });
                 return;
@@ -25,13 +26,13 @@ export default {
                     options: [...questionData.incorrect_answers, questionData.correct_answer].sort(),
                 };
                 await sock.sendMessage(chatId, {
-                    text: `🎯 *Trivia Time!*\n\n*Question:* ${triviaGames[chatId].question}\n\n*Options:*\n${triviaGames[chatId].options.join('\n')}\n\nUse .trivia <answer> to answer!`,
+                    text: `${t('trivia.questionTitle')}\n\n*${t('trivia.question')}:* ${triviaGames[chatId].question}\n\n*${t('trivia.options')}:*\n${triviaGames[chatId].options.join('\n')}\n\n${t('trivia.howToAnswer')}`,
                     ...channelInfo
                 }, { quoted: message });
             }
             catch (error) {
                 await sock.sendMessage(chatId, {
-                    text: 'Error fetching trivia question. Try again later.',
+                    text: t('trivia.fetchError'),
                     ...channelInfo
                 }, { quoted: message });
             }
@@ -39,7 +40,7 @@ export default {
         else {
             if (!triviaGames[chatId]) {
                 await sock.sendMessage(chatId, {
-                    text: 'No trivia game is in progress. Use .trivia to start one!',
+                    text: t('trivia.noGame'),
                     ...channelInfo
                 }, { quoted: message });
                 return;
@@ -48,13 +49,13 @@ export default {
             const answer = args.join(' ');
             if (answer.toLowerCase() === game.correctAnswer.toLowerCase()) {
                 await sock.sendMessage(chatId, {
-                    text: `✅ Correct! The answer is *${game.correctAnswer}*`,
+                    text: t('trivia.correct', { answer: game.correctAnswer }),
                     ...channelInfo
                 }, { quoted: message });
             }
             else {
                 await sock.sendMessage(chatId, {
-                    text: `❌ Wrong! The correct answer was *${game.correctAnswer}*`,
+                    text: t('trivia.wrong', { answer: game.correctAnswer }),
                     ...channelInfo
                 }, { quoted: message });
             }

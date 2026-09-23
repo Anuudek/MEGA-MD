@@ -1,3 +1,4 @@
+import t, { tList } from '../lib/i18n.js';
 export default {
     command: '8ball',
     aliases: ['eightball', 'magic8ball'],
@@ -10,29 +11,20 @@ export default {
             const question = args.join(' ');
             if (!question) {
                 await sock.sendMessage(chatId, {
-                    text: '🎱 Please ask a question!'
+                    text: t('eightball.askQuestion')
                 }, { quoted: message });
                 return;
             }
-            const eightBallResponses = [
-                "Yes, definitely!",
-                "No way!",
-                "Ask again later.",
-                "It is certain.",
-                "Very doubtful.",
-                "Without a doubt.",
-                "My reply is no.",
-                "Signs point to yes."
-            ];
+            const eightBallResponses = tList('eightball.responses');
             const randomResponse = eightBallResponses[Math.floor(Math.random() * eightBallResponses.length)];
             await sock.sendMessage(chatId, {
-                text: `🎱 *Question:* ${question}\n\n*Answer:* ${randomResponse}`
+                text: `🎱 *${t('eightball.questionLabel')}:* ${question}\n\n*${t('eightball.answerLabel')}:* ${randomResponse}`
             }, { quoted: message });
         }
         catch (error) {
             console.error('Error in 8ball command:', error);
             await sock.sendMessage(chatId, {
-                text: '❌ Something went wrong with the magic 8-ball!'
+                text: t('eightball.error')
             }, { quoted: message });
         }
     }

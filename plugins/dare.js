@@ -1,3 +1,4 @@
+import t from '../lib/i18n.js';
 export default {
     command: 'dare',
     aliases: ['truthordare', 'challenge'],
@@ -21,7 +22,7 @@ export default {
         catch (error) {
             console.error('Error in dare command:', error);
             await sock.sendMessage(chatId, {
-                text: '❌ Failed to get dare. Please try again later!'
+                text: t('dare.fetchError')
             }, { quoted: message });
         }
     }
