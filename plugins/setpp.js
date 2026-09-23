@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { downloadContentFromMessage } from '@whiskeysockets/baileys';
 import isOwnerOrSudo from '../lib/isOwner.js';
+import t from '../lib/i18n.js';
 export default {
     command: 'setpp',
     aliases: ['setppic', 'setdp'],
@@ -15,21 +16,21 @@ export default {
             const isOwner = await isOwnerOrSudo(senderId, sock, chatId);
             if (!message.key.fromMe && !isOwner) {
                 await sock.sendMessage(chatId, {
-                    text: '*This command is only available for the owner!*'
+                    text: t('setpp.ownerOnly')
                 }, { quoted: message });
                 return;
             }
             const quotedMessage = message.message?.extendedTextMessage?.contextInfo?.quotedMessage;
             if (!quotedMessage) {
                 await sock.sendMessage(chatId, {
-                    text: '⚠️ Please reply to an image with the .setpp command!'
+                    text: t('setpp.replyImage')
                 }, { quoted: message });
                 return;
             }
             const imageMessage = quotedMessage.imageMessage || quotedMessage.stickerMessage;
             if (!imageMessage) {
                 await sock.sendMessage(chatId, {
-                    text: '*The replied message must contain an image!*'
+                    text: t('setpp.mustBeImage')
                 }, { quoted: message });
                 return;
             }
@@ -45,13 +46,13 @@ export default {
             await sock.updateProfilePicture(sock.user.id, { url: imagePath });
             fs.unlinkSync(imagePath);
             await sock.sendMessage(chatId, {
-                text: '✅ Successfully updated bot profile picture!'
+                text: t('setpp.success')
             }, { quoted: message });
         }
         catch (error) {
             console.error('SetPP Command Error:', error);
             await sock.sendMessage(chatId, {
-                text: '❌ Failed to update profile picture!'
+                text: t('setpp.failed')
             }, { quoted: message });
         }
     }

@@ -1,3 +1,4 @@
+import t from '../lib/i18n.js';
 export default {
     command: 'setgname',
     aliases: ['setname', 'groupname'],
@@ -11,20 +12,20 @@ export default {
         const name = args.join(' ').trim();
         if (!name) {
             await sock.sendMessage(chatId, {
-                text: '❌ *Please provide a group name*\n\nUsage: `.setgname <new name>`'
+                text: t('setgname.usage')
             }, { quoted: message });
             return;
         }
         try {
             await sock.groupUpdateSubject(chatId, name);
             await sock.sendMessage(chatId, {
-                text: `✅ *Group name updated to:*\n${name}`
+                text: t('setgname.success', { name })
             }, { quoted: message });
         }
         catch (error) {
             console.error('Error updating group name:', error);
             await sock.sendMessage(chatId, {
-                text: '❌ *Failed to update group name*\n\nMake sure the bot is an admin.'
+                text: t('setgname.failed')
             }, { quoted: message });
         }
     }

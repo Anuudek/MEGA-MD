@@ -1,3 +1,4 @@
+import t from '../lib/i18n.js';
 export default {
     command: 'setgdesc',
     aliases: ['setdesc', 'groupdesc'],
@@ -11,20 +12,20 @@ export default {
         const desc = args.join(' ').trim();
         if (!desc) {
             await sock.sendMessage(chatId, {
-                text: '❌ *Please provide a description*\n\nUsage: `.setgdesc <description>`'
+                text: t('setgdesc.usage')
             }, { quoted: message });
             return;
         }
         try {
             await sock.groupUpdateDescription(chatId, desc);
             await sock.sendMessage(chatId, {
-                text: '✅ *Group description updated successfully!*'
+                text: t('setgdesc.success')
             }, { quoted: message });
         }
         catch (error) {
             console.error('Error updating group description:', error);
             await sock.sendMessage(chatId, {
-                text: '❌ *Failed to update group description*\n\nMake sure the bot is an admin.'
+                text: t('setgdesc.failed')
             }, { quoted: message });
         }
     }
