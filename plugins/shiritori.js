@@ -1,62 +1,123 @@
 import t from '../lib/i18n.js';
+import { silabificar, normalizeSyllable } from '../lib/syllables.js';
 
 const PALAVRAS = [
-    'abacaxi', 'amor', 'amigo', 'arvore', 'avatar', 'bola', 'banana', 'barco', 'boneca',
+    'abacaxi', 'amor', 'amigo', 'árvore', 'avatar', 'bola', 'banana', 'barco', 'boneca',
     'borboleta', 'cadeira', 'caderno', 'cachorro', 'casa', 'carro', 'cavalo', 'chave',
-    'chuva', 'cidade', 'coelho', 'computador', 'coracao', 'cobra', 'dado', 'dedo', 'dente',
+    'chuva', 'cidade', 'coelho', 'computador', 'coração', 'cobra', 'dado', 'dedo', 'dente',
     'elefante', 'escola', 'espelho', 'estrela', 'fada', 'faca', 'floresta', 'fogo', 'foto',
-    'futebol', 'galinha', 'gato', 'girafa', 'guitarra', 'historia', 'hospital', 'igreja',
-    'ilha', 'internet', 'janela', 'jardim', 'jacare', 'lago', 'lampada', 'laranja', 'leao',
-    'letra', 'livro', 'lua', 'macaco', 'mala', 'mao', 'mar', 'mesa', 'montanha', 'morango',
-    'motor', 'musica', 'natureza', 'navio', 'ninho', 'noite', 'nuvem', 'oceano', 'olho',
-    'onda', 'orelha', 'ovo', 'pao', 'papel', 'parede', 'passaro', 'pato', 'peixe', 'pente',
-    'pera', 'ponte', 'porta', 'praia', 'prato', 'quadro', 'queijo', 'rato', 'relogio', 'rio',
-    'roda', 'rosa', 'sabao', 'sapato', 'sapo', 'sol', 'sombra', 'tarde', 'telefone',
-    'telhado', 'teto', 'tigre', 'tomate', 'trem', 'tubarao', 'urso', 'uva', 'vaca', 'vento',
-    'vidro', 'violao', 'xicara', 'zebra',
+    'futebol', 'galinha', 'gato', 'girafa', 'guitarra', 'história', 'hospital', 'igreja',
+    'ilha', 'internet', 'janela', 'jardim', 'jacaré', 'lago', 'lâmpada', 'laranja', 'leão',
+    'letra', 'livro', 'lua', 'macaco', 'mala', 'mão', 'mar', 'mesa', 'montanha', 'morango',
+    'motor', 'música', 'natureza', 'navio', 'ninho', 'noite', 'nuvem', 'oceano', 'olho',
+    'onda', 'orelha', 'ovo', 'pão', 'papel', 'parede', 'pássaro', 'pato', 'peixe', 'pente',
+    'pera', 'ponte', 'porta', 'praia', 'prato', 'quadro', 'queijo', 'rato', 'relógio', 'rio',
+    'roda', 'rosa', 'sabão', 'sapato', 'sapo', 'sol', 'sombra', 'tarde', 'telefone',
+    'telhado', 'teto', 'tigre', 'tomate', 'trem', 'tubarão', 'urso', 'uva', 'vaca', 'vento',
+    'vidro', 'violão', 'xícara', 'zebra',
 ];
 
+const TURN_TIMEOUT_MS = 45000;
 const shiritoriGames = new Map();
 
-function normalize(str) {
-    return str.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+function ultimaSilabaDe(palavra) {
+    const silabas = silabificar(palavra);
+    return normalizeSyllable(silabas[silabas.length - 1]);
 }
 
-function ultimaLetraDe(palavraNormalizada) {
-    return palavraNormalizada[palavraNormalizada.length - 1];
+function primeiraSilabaDe(palavra) {
+    const silabas = silabificar(palavra);
+    return normalizeSyllable(silabas[0]);
 }
 
-function placar(game) {
-    const entradas = [...game.pontuacao.entries()].sort((a, b) => b[1] - a[1]);
-    if (!entradas.length) return t('shiritori.semPontos');
-    return entradas.map(([id, pts], i) => `${i + 1}. @${id.split('@')[0]} - ${pts}`).join('\n');
+function jogadorDaVez(game) {
+    return game.players[game.currentIndex];
+}
+
+function limparTimer(game) {
+    if (game.turnTimer) {
+        clearTimeout(game.turnTimer);
+        game.turnTimer = null;
+    }
+}
+
+function armarTimer(sock, chatId, game) {
+    limparTimer(game);
+    game.turnTimer = setTimeout(async () => {
+        await eliminar(sock, chatId, jogadorDaVez(game), t('shiritori.eliminadoTempo', { user: jogadorDaVez(game).split('@')[0] }));
+    }, TURN_TIMEOUT_MS);
+}
+
+async function eliminar(sock, chatId, senderId, motivoTexto) {
+    const game = shiritoriGames.get(chatId);
+    if (!game) return;
+
+    const idx = game.players.indexOf(senderId);
+    if (idx !== -1) game.players.splice(idx, 1);
+
+    if (game.players.length <= 1) {
+        limparTimer(game);
+        const vencedor = game.players[0];
+        shiritoriGames.delete(chatId);
+        const textoFinal = vencedor
+            ? `${motivoTexto}\n\n${t('shiritori.vencedor', { user: vencedor.split('@')[0] })}`
+            : motivoTexto;
+        await sock.sendMessage(chatId, {
+            text: textoFinal,
+            mentions: [senderId, vencedor].filter(Boolean)
+        });
+        return;
+    }
+
+    if (game.currentIndex >= game.players.length) {
+        game.currentIndex = 0;
+    }
+    const proximo = jogadorDaVez(game);
+    await sock.sendMessage(chatId, {
+        text: `${motivoTexto}${t('shiritori.proximaRodada', { silaba: game.ultimaSilaba.toUpperCase(), user: proximo.split('@')[0] })}`,
+        mentions: [senderId, proximo]
+    });
+    armarTimer(sock, chatId, game);
 }
 
 export async function handleShiritoriMove(sock, chatId, senderId, text) {
     const game = shiritoriGames.get(chatId);
-    if (!game)
+    if (!game || game.status !== 'PLAYING')
         return false;
 
-    const palavra = normalize(text);
-    if (!palavra || palavra.length < 2 || !/^[a-z]+$/.test(palavra))
+    if (senderId !== jogadorDaVez(game))
         return false;
 
-    if (palavra[0] !== game.ultimaLetra)
+    const palavra = text.trim();
+    if (!palavra || /\s/.test(palavra) || palavra.length < 2)
+        return false;
+    const normalizada = normalizeSyllable(palavra);
+    if (!/^[a-z]+$/.test(normalizada))
         return false;
 
-    if (game.usadas.has(palavra)) {
-        await sock.sendMessage(chatId, { text: t('shiritori.jaUsada', { palavra }) });
+    limparTimer(game);
+
+    if (game.usadas.has(normalizada)) {
+        await eliminar(sock, chatId, senderId, t('shiritori.eliminadoRepetida', { user: senderId.split('@')[0], palavra }));
         return true;
     }
 
-    game.usadas.add(palavra);
-    game.ultimaLetra = ultimaLetraDe(palavra);
-    game.pontuacao.set(senderId, (game.pontuacao.get(senderId) || 0) + 1);
+    const primeira = primeiraSilabaDe(palavra);
+    if (primeira !== game.ultimaSilaba) {
+        await eliminar(sock, chatId, senderId, t('shiritori.eliminadoSilaba', { user: senderId.split('@')[0], palavra, silaba: game.ultimaSilaba.toUpperCase() }));
+        return true;
+    }
+
+    game.usadas.add(normalizada);
+    game.ultimaSilaba = ultimaSilabaDe(palavra);
+    game.currentIndex = (game.currentIndex + 1) % game.players.length;
+    const proximo = jogadorDaVez(game);
 
     await sock.sendMessage(chatId, {
-        text: t('shiritori.aceita', { palavra, letra: game.ultimaLetra.toUpperCase(), user: senderId.split('@')[0] }),
-        mentions: [senderId]
+        text: t('shiritori.aceita', { palavra, silaba: game.ultimaSilaba.toUpperCase(), user: proximo.split('@')[0] }),
+        mentions: [proximo]
     });
+    armarTimer(sock, chatId, game);
     return true;
 }
 
@@ -64,11 +125,12 @@ export default {
     command: 'shiritori',
     aliases: ['correntedepalavras', 'encadeado'],
     category: 'games',
-    description: 'Corrente de palavras: cada palavra tem que comecar com a ultima letra da anterior',
+    description: 'Shiritori: corrente de palavras por sílaba, em roda, com eliminação',
     usage: '.shiritori',
     groupOnly: true,
     async handler(sock, message, args, context) {
         const chatId = context.chatId || message.key.remoteJid;
+        const senderId = context.senderId || message.key.participant || message.key.remoteJid;
         const action = args[0]?.toLowerCase();
 
         if (action === 'parar' || action === 'fim') {
@@ -77,11 +139,53 @@ export default {
                 await sock.sendMessage(chatId, { text: t('shiritori.semJogo') }, { quoted: message });
                 return;
             }
+            limparTimer(game);
             shiritoriGames.delete(chatId);
+            await sock.sendMessage(chatId, { text: t('shiritori.encerrado') }, { quoted: message });
+            return;
+        }
+
+        if (action === 'entrar') {
+            const game = shiritoriGames.get(chatId);
+            if (!game || game.status !== 'LOBBY') {
+                await sock.sendMessage(chatId, { text: t('shiritori.semLobbyParaEntrar') }, { quoted: message });
+                return;
+            }
+            if (game.players.includes(senderId)) {
+                await sock.sendMessage(chatId, { text: t('shiritori.jaNoLobby', { user: senderId.split('@')[0] }), mentions: [senderId] }, { quoted: message });
+                return;
+            }
+            game.players.push(senderId);
             await sock.sendMessage(chatId, {
-                text: `${t('shiritori.encerrado')}\n\n${placar(game)}`,
-                mentions: [...game.pontuacao.keys()]
+                text: t('shiritori.entrouNoLobby', { user: senderId.split('@')[0], total: game.players.length }),
+                mentions: [senderId]
             }, { quoted: message });
+            return;
+        }
+
+        if (action === 'iniciar') {
+            const game = shiritoriGames.get(chatId);
+            if (!game || game.status !== 'LOBBY') {
+                await sock.sendMessage(chatId, { text: t('shiritori.semLobbyParaEntrar') }, { quoted: message });
+                return;
+            }
+            if (game.players.length < 2) {
+                await sock.sendMessage(chatId, { text: t('shiritori.poucosJogadores') }, { quoted: message });
+                return;
+            }
+            const inicial = PALAVRAS[Math.floor(Math.random() * PALAVRAS.length)];
+            game.status = 'PLAYING';
+            game.usadas = new Set([normalizeSyllable(inicial)]);
+            game.ultimaSilaba = ultimaSilabaDe(inicial);
+            game.currentIndex = 0;
+            shiritoriGames.set(chatId, game);
+
+            const primeiro = jogadorDaVez(game);
+            await sock.sendMessage(chatId, {
+                text: t('shiritori.iniciado', { palavra: inicial, silaba: game.ultimaSilaba.toUpperCase(), user: primeiro.split('@')[0] }),
+                mentions: [primeiro]
+            }, { quoted: message });
+            armarTimer(sock, chatId, game);
             return;
         }
 
@@ -90,17 +194,18 @@ export default {
             return;
         }
 
-        const inicial = PALAVRAS[Math.floor(Math.random() * PALAVRAS.length)];
-        const inicialNormalizada = normalize(inicial);
-        const game = {
-            usadas: new Set([inicialNormalizada]),
-            ultimaLetra: ultimaLetraDe(inicialNormalizada),
-            pontuacao: new Map(),
-        };
-        shiritoriGames.set(chatId, game);
+        shiritoriGames.set(chatId, {
+            status: 'LOBBY',
+            players: [senderId],
+            currentIndex: 0,
+            usadas: new Set(),
+            ultimaSilaba: '',
+            turnTimer: null,
+        });
 
         await sock.sendMessage(chatId, {
-            text: t('shiritori.iniciado', { palavra: inicial, letra: game.ultimaLetra.toUpperCase() })
+            text: t('shiritori.lobbyAberto', { user: senderId.split('@')[0] }),
+            mentions: [senderId]
         }, { quoted: message });
     },
     handleShiritoriMove,
