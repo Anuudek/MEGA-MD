@@ -40,38 +40,8 @@ export async function storeGroupMessage(sock, message) {
         let content = '';
         let mediaType = '';
         let mediaPath = '';
-        let isViewOnce = false;
         const sender = message.key.participant || message.key.remoteJid;
-        // View-once media shows up two different ways depending on the
-        // sending client: wrapped in a viewOnceMessage(V2) container, or as
-        // a regular imageMessage/videoMessage with a `viewOnce: true` flag
-        // set directly on it (no wrapper at all).
-        const viewOnceContainer = message.message?.viewOnceMessageV2Extension?.message || message.message?.viewOnceMessageV2?.message || message.message?.viewOnceMessage?.message;
-        const directViewOnceImage = message.message?.imageMessage?.viewOnce ? message.message.imageMessage : null;
-        const directViewOnceVideo = message.message?.videoMessage?.viewOnce ? message.message.videoMessage : null;
-        if (message.message?.imageMessage || message.message?.videoMessage || viewOnceContainer) {
-            const redact = (obj) => JSON.stringify(obj, (k, v) => {
-                if (['jpegThumbnail', 'mediaKey', 'fileEncSha256', 'fileSha256', 'thumbnailDirectPath', 'streamingSidecar'].includes(k))
-                    return '<omitted>';
-                return v;
-            }, 2);
-            console.log('[GAD-DEBUG] full message.message:', redact(message.message));
-        }
-        if (viewOnceContainer?.imageMessage || directViewOnceImage) {
-            const img = viewOnceContainer?.imageMessage || directViewOnceImage;
-            mediaType = 'image';
-            content = img.caption || '';
-            mediaPath = await downloadToTemp(img, 'image', `gad_${messageId}.jpg`);
-            isViewOnce = true;
-        }
-        else if (viewOnceContainer?.videoMessage || directViewOnceVideo) {
-            const vid = viewOnceContainer?.videoMessage || directViewOnceVideo;
-            mediaType = 'video';
-            content = vid.caption || '';
-            mediaPath = await downloadToTemp(vid, 'video', `gad_${messageId}.mp4`);
-            isViewOnce = true;
-        }
-        else if (message.message?.conversation) {
+        if (message.message?.conversation) {
             content = message.message.conversation;
         }
         else if (message.message?.extendedTextMessage?.text) {
@@ -105,28 +75,6 @@ export async function storeGroupMessage(sock, message) {
             group: chatId,
             timestamp: new Date().toISOString()
         });
-        if (isViewOnce && mediaType && fs.existsSync(mediaPath)) {
-            try {
-                const senderName = sender.split('@')[0];
-                const mediaOptions = {
-                    caption: t('groupantidelete.viewOnceCaption', { type: mediaType, user: senderName }),
-                    mentions: [sender]
-                };
-                if (mediaType === 'image') {
-                    await sock.sendMessage(chatId, { image: { url: mediaPath }, ...mediaOptions });
-                }
-                else if (mediaType === 'video') {
-                    await sock.sendMessage(chatId, { video: { url: mediaPath }, ...mediaOptions });
-                }
-                try {
-                    fs.unlinkSync(mediaPath);
-                }
-                catch { }
-            }
-            catch (e) {
-                console.error('groupantidelete view-once repost error:', e);
-            }
-        }
     }
     catch (err) {
         console.error('storeGroupMessage error:', err);
