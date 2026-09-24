@@ -10,8 +10,7 @@
   "httpPort": 5000,
   "icon": "file://logo.png",
   "addons": {
-    "localstorage": {},
-    "mongodb": {}
+    "localstorage": {}
   },
   "tags": ["whatsapp", "bot", "chat", "automation"],
   "website": "https://github.com/GlobalTechInfo/MEGA-MD",
