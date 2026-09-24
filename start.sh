@@ -30,5 +30,13 @@ if [[ ! -f "$DATA_DIR/.env" ]]; then
 fi
 ln -sfn "$DATA_DIR/.env" "$RUN_DIR/.env"
 
+# The app's own code (plugins, lightweight_store.js) checks process.env.MONGO_URL
+# directly everywhere to decide whether a database is available. Cloudron's
+# mongodb addon injects CLOUDRON_MONGODB_URL instead, so bridge it here rather
+# than touching every file that reads MONGO_URL.
+if [[ -n "${CLOUDRON_MONGODB_URL:-}" && -z "${MONGO_URL:-}" ]]; then
+    export MONGO_URL="$CLOUDRON_MONGODB_URL"
+fi
+
 cd "$RUN_DIR"
 exec node index.js
