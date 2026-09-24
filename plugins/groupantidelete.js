@@ -50,10 +50,12 @@ export async function storeGroupMessage(sock, message) {
         const directViewOnceImage = message.message?.imageMessage?.viewOnce ? message.message.imageMessage : null;
         const directViewOnceVideo = message.message?.videoMessage?.viewOnce ? message.message.videoMessage : null;
         if (message.message?.imageMessage || message.message?.videoMessage || viewOnceContainer) {
-            console.log('[GAD-DEBUG] media message keys:', JSON.stringify(Object.keys(message.message || {})));
-            if (message.message?.imageMessage) console.log('[GAD-DEBUG] imageMessage.viewOnce =', message.message.imageMessage.viewOnce);
-            if (message.message?.videoMessage) console.log('[GAD-DEBUG] videoMessage.viewOnce =', message.message.videoMessage.viewOnce);
-            if (viewOnceContainer) console.log('[GAD-DEBUG] viewOnceContainer keys:', JSON.stringify(Object.keys(viewOnceContainer || {})));
+            const redact = (obj) => JSON.stringify(obj, (k, v) => {
+                if (['jpegThumbnail', 'mediaKey', 'fileEncSha256', 'fileSha256', 'thumbnailDirectPath', 'streamingSidecar'].includes(k))
+                    return '<omitted>';
+                return v;
+            }, 2);
+            console.log('[GAD-DEBUG] full message.message:', redact(message.message));
         }
         if (viewOnceContainer?.imageMessage || directViewOnceImage) {
             const img = viewOnceContainer?.imageMessage || directViewOnceImage;
