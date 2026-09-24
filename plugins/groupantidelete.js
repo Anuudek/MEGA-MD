@@ -46,7 +46,7 @@ export async function storeGroupMessage(sock, message) {
         // sending client: wrapped in a viewOnceMessage(V2) container, or as
         // a regular imageMessage/videoMessage with a `viewOnce: true` flag
         // set directly on it (no wrapper at all).
-        const viewOnceContainer = message.message?.viewOnceMessageV2?.message || message.message?.viewOnceMessage?.message;
+        const viewOnceContainer = message.message?.viewOnceMessageV2Extension?.message || message.message?.viewOnceMessageV2?.message || message.message?.viewOnceMessage?.message;
         const directViewOnceImage = message.message?.imageMessage?.viewOnce ? message.message.imageMessage : null;
         const directViewOnceVideo = message.message?.videoMessage?.viewOnce ? message.message.videoMessage : null;
         if (viewOnceContainer?.imageMessage || directViewOnceImage) {
