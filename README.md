@@ -26,6 +26,17 @@
 
 ---
 
+### 🐍 This fork (allhands / Cobra)
+
+This is allhands' internal fork of upstream MEGA-MD, packaged for Cloudron and running as **Cobra**. On top of upstream it adds:
+
+- Cloudron packaging (`Dockerfile.cloudron`, `CloudronManifest.json`, `start.sh`) — see [`CLOUDRON.md`](CLOUDRON.md)
+- Full pt-BR translation of the plugin library and all central system messages
+- QR-code-only pairing with a live web UI (auto-refreshing QR at the app's root URL) — pairing-code linking is currently broken upstream, see [Troubleshooting](#-troubleshooting)
+- MongoDB session backup + restore, and a bridge so Cloudron's native `mongodb` addon (`CLOUDRON_MONGODB_URL`) is picked up automatically without touching plugin code
+- `.groupantidelete` — per-group, admin-toggleable version of antidelete that reposts deleted messages and view-once media back into the same group instead of DMing the owner
+- Fixed view-once detection (handles all three WhatsApp wrapper formats), fixed `.sticker` to accept direct media (not just replies), removed the `.menu`/`.smenu` thumbnail image
+
 ### 🌍 Deploy on your favourite platform
 
 [![Heroku](https://img.shields.io/badge/Heroku-430098?style=for-the-badge&logo=heroku&logoColor=white)](https://heroku.com)
@@ -38,6 +49,7 @@
 [![Termux](https://img.shields.io/badge/Termux-000000?style=for-the-badge&logo=android&logoColor=white)](#-termux-android)
 [![Windows](https://img.shields.io/badge/Windows_WSL-0078D4?style=for-the-badge&logo=windows&logoColor=white)](#-windows-wsl)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](#-dockerfile)
+[![Cloudron](https://img.shields.io/badge/Cloudron-14B9D6?style=for-the-badge&logo=cloudron&logoColor=white)](CLOUDRON.md)
 
 </div>
 
@@ -62,6 +74,7 @@
   - [☁️ Koyeb](#-koyeb)
   - [🪂 Fly.io](#-flyio)
   - [🐳 Dockerfile](#-dockerfile)
+  - [☁️ Cloudron](CLOUDRON.md)
   - [🎮 Discord Panels](#-discord-panels-pterodactyl)
 - [🗄️ Storage Backends](#️-storage-backends)
 - [🛠️ Environment Variables](#️-environment-variables)
@@ -89,7 +102,11 @@
 | 🔁 | **Auto-Reply** | Configurable trigger-based auto responses with `{name}` support |
 | 🎮 | **Games** | TicTacToe and more built in |
 | ⏳ | **Disappearing Messages** | Set per-chat or default timers via commands |
-| 📱 | **Multi-Platform** | Runs on Termux, VPS, Railway, Render, Heroku, Koyeb, Fly.io, Replit |
+| 📱 | **Multi-Platform** | Runs on Termux, VPS, Railway, Render, Heroku, Koyeb, Fly.io, Replit, Cloudron |
+| 🇧🇷 | **pt-BR translations** *(fork)* | Full Portuguese i18n layer for plugin replies and system messages |
+| 🗑️ | **Per-group antidelete** *(fork)* | `.groupantidelete` reposts deleted messages/view-once media in the group itself |
+| 🔄 | **MongoDB session backup** *(fork)* | Session survives ephemeral filesystems (Cloudron, Heroku) via automatic Mongo backup/restore |
+| 📷 | **QR web UI** *(fork)* | Auto-refreshing QR code page at the bot's root URL, no terminal access needed to pair |
 
 ---
 
@@ -112,7 +129,7 @@
 ## ⚡ Quick Start
 
 ```bash
-git clone https://github.com/GlobalTechInfo/MEGA-MD.git
+git clone https://github.com/Anuudek/MEGA-MD.git
 cd MEGA-MD
 npm install
 cp sample.env .env
@@ -123,46 +140,28 @@ npm start
 ---
 
 ## 🔐 Getting Your Session ID
-> [!IMPORTANT]
-> The bot uses a **Session ID** to connect to WhatsApp without scanning QR every time. Generate it once and paste it in `.env`.
 
-### Step 1 — Open the session generator
+> [!WARNING]
+> **Pairing-code linking is currently broken** on all Baileys-based bots (this fork included). WhatsApp shipped a protocol change (`companion_reg_refresh`, ~July 2026) that Baileys doesn't handle yet — phone-number pairing codes fail with "Couldn't link device" even with a patched Baileys. **QR-code pairing is unaffected.** Use QR (below) until upstream Baileys ships a real fix.
 
-> 🌐 **https://mega-pairing.onrender.com**
+### Recommended — QR code
 
-### Step 2 — Generate your session
+Set `PAIR_MODE=qr` in `.env` (or pass `--qr-code` as a startup arg) and start the bot. You can scan it two ways:
 
-**Option A — Pair Code** *(Recommended)*
+- **Web UI** — open the bot's URL in a browser. It shows the QR code and auto-refreshes every few seconds until you scan it or it connects. This is the easiest option for headless deployments (Cloudron, VPS with no terminal access).
+- **Terminal** — the QR also prints directly in the console/logs on startup, and is saved to `./qr.png`.
 
-1. Enter your bot's WhatsApp number with country code (e.g. `923001234567`)
-2. Click **Generate Pair Code**
-3. An 8-character code appears (e.g. `J38K-4PNS`)
-4. On your phone: **WhatsApp → ⋮ Menu → Linked Devices → Link a Device → Link with phone number**
-5. Enter the code — session is created
-6. Copy the **Session ID** shown on the page
+Scan with **WhatsApp → ⋮ Menu → Linked Devices → Link a Device**. No `SESSION_ID` needed — the session is created on disk (or restored from MongoDB, see [Storage Backends](#️-storage-backends)) and persists across restarts.
 
-**Option B — QR Code**
+### Legacy — Session ID / Pair Code
 
-1. Click the **QR Code** tab
-2. Scan the QR code with your WhatsApp
-3. Copy the **Session ID** shown after scanning
-
-### Step 3 — Add to `.env`
+`SESSION_ID` (from a Gist-based pairing service) and `PAIRING_NUMBER` (terminal pair code) still work in the code path, but **both rely on the same broken pairing-code flow** above and will currently fail to link. Only use these once upstream Baileys fixes `companion_reg_refresh` handling.
 
 ```env
-SESSION_ID=GlobalTechInfo/MEGA-MD_xxxxxxxxxxxxxxxxxxxxxxxx
-```
-
-### Alternative — Pairing via terminal
-
-Leave `SESSION_ID` empty and set:
-
-```env
+SESSION_ID=Anuudek/MEGA-MD_xxxxxxxxxxxxxxxxxxxxxxxx
+# or
 PAIRING_NUMBER=923001234567
 ```
-
-> [!NOTE]
-> The bot will print an 8-character pairing code in the terminal on startup. Link it via **WhatsApp → Linked Devices → Link with phone number** within 60 seconds.
 
 ---
 
@@ -175,12 +174,8 @@ cp sample.env .env
 ```
 
 ```env
-# ── REQUIRED (choose one) ────────────────────────────────────
-SESSION_ID=GlobalTechInfo/MEGA-MD_your_gist_id_here
-# OR
-PAIRING_NUMBER=923001234567
-
 # ── REQUIRED ─────────────────────────────────────────────────
+PAIR_MODE=qr                     # QR pairing (recommended, see Session Setup)
 OWNER_NUMBER=923000000000        # No + sign
 
 # ── BOT IDENTITY ─────────────────────────────────────────────
@@ -202,10 +197,11 @@ PORT=5000
 MAX_STORE_MESSAGES=50
 
 # ── DATABASE (all empty = JSON files) ────────────────────────
-MONGO_URL=
+MONGO_URL=                       # On Cloudron, auto-filled from CLOUDRON_MONGODB_URL if unset
 POSTGRES_URL=
 MYSQL_URL=
 DB_URL=                          # SQLite: ./data/baileys.db
+SESSION_SYNC_ID=                 # Optional: namespace for MongoDB session backup (default: "default")
 ```
 
 ---
@@ -216,7 +212,7 @@ DB_URL=                          # SQLite: ./data/baileys.db
 
 ```bash
 # 1. Clone
-git clone https://github.com/GlobalTechInfo/MEGA-MD.git
+git clone https://github.com/Anuudek/MEGA-MD.git
 cd MEGA-MD
 
 # 2. Install dependencies
@@ -233,7 +229,7 @@ npm start
 ### One-Line VPS Installer
 
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/GlobalTechInfo/MEGA-MD/main/lib/install.sh)
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/Anuudek/MEGA-MD/main/lib/install.sh)
 ```
 > [!IMPORTANT]
 > This automatically installs Node.js 20, ffmpeg, libvips, libwebp, PM2, clones the repo, builds it, and sets up data files.
@@ -265,7 +261,7 @@ apt update && apt upgrade -y
 apt install -y git ffmpeg build-essential libvips-dev webp nodejs npm curl
 
 # Clone and setup
-git clone https://github.com/GlobalTechInfo/MEGA-MD.git
+git clone https://github.com/Anuudek/MEGA-MD.git
 cd MEGA-MD
 npm install
 cp sample.env .env && nano .env
@@ -295,7 +291,7 @@ npm start
 
 **One-line install (recommended):**
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/GlobalTechInfo/MEGA-MD/main/lib/install.sh)
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/Anuudek/MEGA-MD/main/lib/install.sh)
 ```
 
 **Manual:**
@@ -303,7 +299,7 @@ sudo bash <(curl -fsSL https://raw.githubusercontent.com/GlobalTechInfo/MEGA-MD/
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs git ffmpeg libvips-dev libwebp-dev build-essential
 
-git clone https://github.com/GlobalTechInfo/MEGA-MD.git
+git clone https://github.com/Anuudek/MEGA-MD.git
 cd MEGA-MD
 npm install
 cp sample.env .env && nano .env
@@ -335,7 +331,7 @@ sudo apt update
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs git ffmpeg libvips-dev libwebp-dev build-essential
 
-git clone https://github.com/GlobalTechInfo/MEGA-MD.git
+git clone https://github.com/Anuudek/MEGA-MD.git
 cd MEGA-MD
 npm install
 cp sample.env .env && nano .env
@@ -351,12 +347,12 @@ npm start
 > The repo includes pre-configured `.replit` and `replit.nix`.
 
 1. Go to [replit.com](https://replit.com) → **Create Repl** → **Import from GitHub**
-2. Paste: `https://github.com/GlobalTechInfo/MEGA-MD`
+2. Paste: `https://github.com/Anuudek/MEGA-MD`
 3. Open **Secrets** tab (🔒) and add:
 
    | Key | Value |
    |---|---|
-   | `SESSION_ID` | `GlobalTechInfo/MEGA-MD_your_gist_id` |
+   | `SESSION_ID` | `Anuudek/MEGA-MD_your_gist_id` |
    | `OWNER_NUMBER` | `923001234567` |
 
 4. Click **Run**
@@ -380,7 +376,7 @@ npm start
 
 **One-line Deployer:**
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/GlobalTechInfo/MEGA-MD/main/lib/heroku.sh)
+bash <(curl -s https://raw.githubusercontent.com/Anuudek/MEGA-MD/main/lib/heroku.sh)
 ```
 **Manual:**
 ```bash
@@ -388,7 +384,7 @@ heroku login
 heroku create your-bot-name
 heroku stack:set container
 
-heroku config:set SESSION_ID=GlobalTechInfo/MEGA-MD_your_gist_id
+heroku config:set SESSION_ID=Anuudek/MEGA-MD_your_gist_id
 heroku config:set OWNER_NUMBER=923001234567
 heroku config:set MONGO_URL=your_mongodb_url   # Recommended
 
@@ -434,7 +430,7 @@ heroku logs --tail
 
    | Key | Value |
    |---|---|
-   | `SESSION_ID` | `GlobalTechInfo/MEGA-MD_your_gist_id` |
+   | `SESSION_ID` | `Anuudek/MEGA-MD_your_gist_id` |
    | `OWNER_NUMBER` | `923001234567` |
 
 5. Railway auto-builds via `Dockerfile` and deploys
@@ -463,7 +459,7 @@ heroku logs --tail
 
 **One-line Deployer:**
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/GlobalTechInfo/MEGA-MD/main/lib/fly.sh)
+bash <(curl -s https://raw.githubusercontent.com/Anuudek/MEGA-MD/main/lib/fly.sh)
 ```
 **Manual:**
 ```bash
@@ -471,7 +467,7 @@ curl -L https://fly.io/install.sh | sh
 fly auth login
 
 fly launch --no-deploy
-fly secrets set SESSION_ID=GlobalTechInfo/MEGA-MD_your_gist_id
+fly secrets set SESSION_ID=Anuudek/MEGA-MD_your_gist_id
 fly secrets set OWNER_NUMBER=923001234567
 fly deploy
 
@@ -494,7 +490,7 @@ docker build -t mega-md .
 
 # Run
 docker run -d \
-  -e SESSION_ID=GlobalTechInfo/MEGA-MD_your_gist_id \
+  -e SESSION_ID=Anuudek/MEGA-MD_your_gist_id \
   -e OWNER_NUMBER=923001234567 \
   -p 5000:5000 \
   --name mega-md \
@@ -555,14 +551,19 @@ DB_URL=./data/baileys.db
 > [!TIP]
 > Get a free MongoDB cluster at [MongoDB Atlas](https://cloud.mongodb.com) — best choice for cloud deployments where the filesystem resets.
 
+> [!NOTE]
+> On Cloudron, add the native `mongodb` addon in `CloudronManifest.json` instead of a manual `MONGO_URL`. `start.sh` bridges Cloudron's injected `CLOUDRON_MONGODB_URL` to `MONGO_URL` automatically, so the `mongo` backend (and its correct per-chat-scoped storage) activates without touching plugin code. This also fixes a bug in the JSON backend where group-scoped settings (antilink, antispam, groupantidelete, etc) are stored flat and shared across every group — the DB backends scope correctly by `(chatId, key)`.
+
 ---
 
 ## 🛠️ Environment Variables
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `SESSION_ID` | ✅ *one of* | — | From mega-pairing.onrender.com |
-| `PAIRING_NUMBER` | ✅ *one of* | — | Phone number for terminal pairing |
+| `PAIR_MODE` | ❌ | pairing-code | Set to `qr` to use QR pairing (recommended, see [Session Setup](#-getting-your-session-id)) |
+| `SESSION_ID` | ⚠️ legacy | — | Gist-based session, relies on the currently-broken pairing-code flow |
+| `PAIRING_NUMBER` | ⚠️ legacy | — | Phone number for terminal pairing, same caveat as above |
+| `SESSION_SYNC_ID` | ❌ | `default` | Namespace for MongoDB session backup, only used when `MONGO_URL`/`CLOUDRON_MONGODB_URL` is set |
 | `OWNER_NUMBER` | ✅ | `923051391007` | Your number, no `+` |
 | `BOT_NAME` | ❌ | `MEGA-MD` | Bot display name |
 | `BOT_OWNER` | ❌ | `Qasim Ali` | Owner display name |
@@ -646,12 +647,17 @@ export default {
 
 ## 🔧 Troubleshooting
 
-### Bot not connecting
+### Bot not connecting / "Couldn't link device" with a pairing code
 
-> [!IMPORTANT]
-> - Verify `SESSION_ID` starts with `GlobalTechInfo/MEGA-MD_`
-> - If using `PAIRING_NUMBER`, link within 60 seconds of the code appearing
-> - Reset session and reconnect: `npm run reset-session && npm start`
+WhatsApp shipped a protocol change (`companion_reg_refresh`) that breaks phone-number/pairing-code linking on Baileys as of ~July 2026. This affects `SESSION_ID` and `PAIRING_NUMBER` regardless of how recent your Baileys version is. **QR-code linking is unaffected.** Set `PAIR_MODE=qr` and pair via the web UI or terminal QR instead — see [Session Setup](#-getting-your-session-id).
+
+If you're stuck on pairing code for another reason:
+- Reset session and reconnect: `npm run reset-session && npm start`
+- If using `PAIRING_NUMBER`, link within 60 seconds of the code appearing
+
+### Session lost after every restart (re-scanning QR each time)
+
+Baileys writes session key files asynchronously; an abrupt container/process kill (`SIGTERM`) can cut writes off mid-flight. This fork adds a short delay before exiting on `SIGTERM`/`SIGINT` to let in-flight writes finish, and an optional MongoDB backup/restore (`MONGO_URL`/`CLOUDRON_MONGODB_URL`) that snapshots the session on every credential update and restores it if the local session is empty on boot. If you're still losing sessions on a platform with an ephemeral filesystem, set up a database URL — see [Storage Backends](#️-storage-backends).
 
 ### `myAppStateKey not present` (pin/star broken)
 
@@ -726,6 +732,8 @@ npm run test:watch      # Watch mode during development
 ---
 
 ## 📞 Support
+
+This fork is maintained internally by allhands for the Cobra bot deployment. For fork-specific issues (Cloudron packaging, pt-BR translations, MongoDB bridge), open an issue on [Anuudek/MEGA-MD](https://github.com/Anuudek/MEGA-MD/issues). For upstream bugs unrelated to the fork's changes, see the original project's channels below.
 
 <div align="center">
 
