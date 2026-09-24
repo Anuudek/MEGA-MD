@@ -277,9 +277,7 @@ async function startQasimDev() {
                 const mek = chatUpdate.messages[0];
                 if (!mek.message)
                     return;
-                mek.message = (Object.keys(mek.message)[0] === 'ephemeralMessage')
-                    ? mek.message.ephemeralMessage.message
-                    : mek.message;
+                mek.message = mek.message.ephemeralMessage?.message || mek.message;
                 if (mek.key && mek.key.remoteJid === 'status@broadcast') {
                     await handleStatus(QasimDev, chatUpdate);
                     return;

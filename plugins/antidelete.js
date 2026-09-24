@@ -200,7 +200,9 @@ export async function storeMessage(sock, message) {
                 }
                 catch { }
             }
-            catch (e) { }
+            catch (e) {
+                console.error('antidelete view-once repost error:', e);
+            }
         }
     }
     catch (err) {

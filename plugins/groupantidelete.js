@@ -115,7 +115,9 @@ export async function storeGroupMessage(sock, message) {
                 }
                 catch { }
             }
-            catch (e) { }
+            catch (e) {
+                console.error('groupantidelete view-once repost error:', e);
+            }
         }
     }
     catch (err) {
