@@ -27,6 +27,10 @@ async function hasGitRepo() {
     }
 }
 async function updateViaGit() {
+    // Cloudron (and other setups that copy the repo into a scratch dir owned
+    // by a different user than the one running node) trip git's ownership
+    // check otherwise: "fatal: detected dubious ownership in repository".
+    await run(`git config --global --add safe.directory ${process.cwd()}`).catch(() => {});
     const oldRev = String(await run('git rev-parse HEAD').catch(() => 'unknown')).trim();
     await run('git fetch --all --prune');
     const newRev = String(await run('git rev-parse origin/main')).trim();
@@ -180,7 +184,7 @@ async function updateViaZip(sock, chatId, message, zipOverride) {
     catch { }
     return { copiedFiles: copied };
 }
-async function restartProcess() {
+export async function restartProcess() {
     // Check if running in Docker
     try {
         const { existsSync } = await import('fs');
@@ -214,7 +218,7 @@ async function restartProcess() {
 }
 export default {
     command: 'update',
-    aliases: ['upgrade', 'restart'],
+    aliases: ['upgrade'],
     category: 'owner',
     description: 'Update bot from git or zip without stopping',
     usage: '.update [zip_url]',

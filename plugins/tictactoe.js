@@ -8,7 +8,7 @@ export async function handleTicTacToeMove(sock, chatId, senderId, text) {
             room.state === 'PLAYING');
         if (!room)
             return;
-        const isSurrender = /^(surrender|give up)$/i.test(text);
+        const isSurrender = /^(surrender|give up|desistir)$/i.test(text);
         if (!isSurrender && !/^[1-9]$/.test(text))
             return;
         if (senderId !== room.game.currentTurn && !isSurrender) {

@@ -49,6 +49,12 @@ export async function storeGroupMessage(sock, message) {
         const viewOnceContainer = message.message?.viewOnceMessageV2Extension?.message || message.message?.viewOnceMessageV2?.message || message.message?.viewOnceMessage?.message;
         const directViewOnceImage = message.message?.imageMessage?.viewOnce ? message.message.imageMessage : null;
         const directViewOnceVideo = message.message?.videoMessage?.viewOnce ? message.message.videoMessage : null;
+        if (message.message?.imageMessage || message.message?.videoMessage || viewOnceContainer) {
+            console.log('[GAD-DEBUG] media message keys:', JSON.stringify(Object.keys(message.message || {})));
+            if (message.message?.imageMessage) console.log('[GAD-DEBUG] imageMessage.viewOnce =', message.message.imageMessage.viewOnce);
+            if (message.message?.videoMessage) console.log('[GAD-DEBUG] videoMessage.viewOnce =', message.message.videoMessage.viewOnce);
+            if (viewOnceContainer) console.log('[GAD-DEBUG] viewOnceContainer keys:', JSON.stringify(Object.keys(viewOnceContainer || {})));
+        }
         if (viewOnceContainer?.imageMessage || directViewOnceImage) {
             const img = viewOnceContainer?.imageMessage || directViewOnceImage;
             mediaType = 'image';

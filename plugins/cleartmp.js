@@ -53,7 +53,7 @@ export default {
     usage: '.cleartmp',
     async handler(sock, message, args, context) {
         const chatId = context.chatId || message.key.remoteJid;
-        const senderId = message.key.participant || message.key.remoteJid;
+        const senderId = context.senderId || message.key.participant || message.key.remoteJid;
         try {
             const isOwner = await isOwnerOrSudo(senderId, sock, chatId);
             if (!message.key.fromMe && !isOwner) {
