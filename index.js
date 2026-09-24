@@ -20,6 +20,7 @@ import store from './lib/lightweight_store.js';
 import SaveCreds from './lib/session.js';
 import { server, PORT } from './lib/server.js';
 import { botState } from './lib/botState.js';
+import { pullSessionFromMongoIfNeeded, pushSessionToMongo } from './lib/sessionSync.js';
 import { printLog } from './lib/print.js';
 import { writeErrorLog } from './lib/logger.js';
 import { handleMessages, handleGroupParticipantUpdate, handleStatus, handleCall } from './lib/messageHandler.js';
@@ -194,10 +195,15 @@ async function startQasimDev() {
         const { version } = await fetchLatestWaWebVersion();
         ensureSessionDirectory();
         await delay(1000);
+        // Optional MongoDB backup: if the local session is empty (lost after
+        // a restart, or a brand new deploy) but a synced copy exists in
+        // MongoDB, restore it instead of falling back to a fresh QR pairing.
+        await pullSessionFromMongoIfNeeded('./session');
         const { state, saveCreds } = await useMultiFileAuthState(`./session`);
         const _saveCreds = async () => {
             ensureSessionDirectory();
             await saveCreds();
+            await pushSessionToMongo('./session');
         };
         const msgRetryCounterCache = new NodeCache();
         const ghostMode = await store.getSetting('global', 'stealthMode');
