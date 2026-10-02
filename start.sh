@@ -38,5 +38,14 @@ if [[ -n "${CLOUDRON_MONGODB_URL:-}" && -z "${MONGO_URL:-}" ]]; then
     export MONGO_URL="$CLOUDRON_MONGODB_URL"
 fi
 
+# PO Token provider for yt-dlp (.play/.video/.song/.spotify) - a local HTTP
+# server on 127.0.0.1:4416 that yt-dlp's plugin framework auto-discovers,
+# no flags needed. Runs in the background for the life of the container.
+(
+    cd /opt/bgutil-pot/server/node_modules
+    exec deno run --allow-env --allow-net --allow-ffi=. --allow-read=. ../src/main.ts \
+        >> "$DATA_DIR/logs/bgutil-pot.log" 2>&1
+) &
+
 cd "$RUN_DIR"
 exec node index.js
