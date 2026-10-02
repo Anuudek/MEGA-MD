@@ -6,6 +6,11 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends nodejs && \
     rm -rf /var/lib/apt/lists/*
 
+# Standalone yt-dlp binary (self-contained, no pip needed) - backs .play/.video/.song/.spotify
+# since the old upstream third-party download API they relied on (api.qasimdev.dpdns.org) is dead.
+RUN curl -fsSL https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
+    chmod +x /usr/local/bin/yt-dlp
+
 RUN mkdir -p /app/code /app/pkg
 WORKDIR /app/code
 
