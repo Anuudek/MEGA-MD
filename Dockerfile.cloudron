@@ -1,16 +1,19 @@
 FROM cloudron/base:5.0.0
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends apt-utils curl ffmpeg python3 build-essential git unzip \
+    apt-get install -y --no-install-recommends apt-utils curl ffmpeg python3 python3-pip build-essential git \
         libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev pkg-config && \
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y --no-install-recommends nodejs && \
     rm -rf /var/lib/apt/lists/*
 
-# Standalone yt-dlp binary (self-contained, no pip needed) - backs .play/.video/.song/.spotify
-# since the old upstream third-party download API they relied on (api.qasimdev.dpdns.org) is dead.
-RUN curl -fsSL https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
-    chmod +x /usr/local/bin/yt-dlp
+# yt-dlp via pip (not the standalone zip binary) - backs .play/.video/.song/.spotify since the
+# old upstream third-party download API they relied on (api.qasimdev.dpdns.org) is dead. The
+# standalone zip build turned out not to load external plugin directories at all (verified:
+# --plugin-dirs and the default search path both reported "Plugin directories: none" even with
+# valid plugin files present), which the PO Token plugin below needs to work - pip installs
+# don't have that problem since plugins are just normal importable Python packages.
+RUN pip3 install --break-system-packages -U yt-dlp
 
 # yt-dlp needs a JS runtime to solve YouTube's current signature/PO-token challenges -
 # without it, extraction silently degrades or fails ("Sign in to confirm you're not a bot").
@@ -20,16 +23,13 @@ RUN curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh -s -- -
 # (the session gets flagged/pruned since it was created on a different network). This runs
 # a small local HTTP server (via Deno) that proves request origin independently of cookies -
 # yt-dlp's plugin framework picks it up automatically with no extra flags once both the
-# server is running and the plugin below is installed. See
+# server is running and the plugin (installed via pip, auto-discovered) are present. See
 # https://github.com/Brainicism/bgutil-ytdlp-pot-provider
+RUN pip3 install --break-system-packages -U bgutil-ytdlp-pot-provider
+
 RUN git clone --single-branch --branch 2.0.1 https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git /opt/bgutil-pot && \
     cd /opt/bgutil-pot/server && \
     deno install --allow-scripts=npm:canvas --frozen
-
-RUN mkdir -p /opt/yt-dlp-plugins && \
-    curl -fsSL -o /tmp/bgutil-plugin.zip https://github.com/Brainicism/bgutil-ytdlp-pot-provider/releases/download/2.0.1/bgutil-ytdlp-pot-provider.zip && \
-    unzip -q /tmp/bgutil-plugin.zip -d /opt/yt-dlp-plugins/ && \
-    rm /tmp/bgutil-plugin.zip
 
 RUN mkdir -p /app/code /app/pkg
 WORKDIR /app/code
