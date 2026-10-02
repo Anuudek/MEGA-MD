@@ -11,6 +11,10 @@ RUN apt-get update && \
 RUN curl -fsSL https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
     chmod +x /usr/local/bin/yt-dlp
 
+# yt-dlp needs a JS runtime to solve YouTube's current signature/PO-token challenges -
+# without it, extraction silently degrades or fails ("Sign in to confirm you're not a bot").
+RUN curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh -s -- -y
+
 RUN mkdir -p /app/code /app/pkg
 WORKDIR /app/code
 
