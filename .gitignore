@@ -25,6 +25,9 @@ baileys_store.db
 data/*.json
 !data/.gitkeep
 
+# YouTube cookies for yt-dlp - sensitive, deployed manually, never committed
+data/cookies.txt
+
 # Log files
 *.log
 npm-debug.log*
